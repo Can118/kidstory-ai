@@ -1,6 +1,6 @@
-import React from 'react';
-import { View, Text, StyleSheet, FlatList, Image, Alert } from 'react-native';
-import { TouchableOpacity } from 'react-native-gesture-handler';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, FlatList, Image, Alert, Modal, ScrollView, TouchableOpacity } from 'react-native';
+import { TouchableOpacity as GHTouchableOpacity } from 'react-native-gesture-handler';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -37,6 +37,7 @@ function Sparkle({ style, size = 7, color = '#C4B5FD' }) {
 
 export default function LibraryScreen({ navigation, onNavigateToCreate }) {
   const { stories, loading } = useStoryContext();
+  const [settingsVisible, setSettingsVisible] = useState(false);
 
   const handleResetOnboarding = () => {
     Alert.alert(
@@ -56,6 +57,107 @@ export default function LibraryScreen({ navigation, onNavigateToCreate }) {
     );
   };
 
+  const openSettings = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setSettingsVisible(true);
+  };
+
+  const closeSettings = () => {
+    setSettingsVisible(false);
+  };
+
+  const handleDeleteAllPhotos = () => {
+    closeSettings();
+    Alert.alert(
+      'Delete All Photos',
+      'This will delete all your stories and photos. This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete All',
+          style: 'destructive',
+          onPress: async () => {
+            await AsyncStorage.clear();
+            Alert.alert('Done!', 'All photos and stories have been deleted.');
+          },
+        },
+      ]
+    );
+  };
+
+  const handleDeleteAccount = () => {
+    closeSettings();
+    Alert.alert(
+      'Delete Account',
+      'Are you sure you want to delete your account? This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete Account',
+          style: 'destructive',
+          onPress: () => {
+            Alert.alert('Account Deleted', 'Your account has been deleted.');
+          },
+        },
+      ]
+    );
+  };
+
+  const settingsOptions = [
+    {
+      icon: 'notifications-outline',
+      title: 'Turn on notifications',
+      onPress: () => {
+        closeSettings();
+        Alert.alert('Notifications', 'This feature will be available soon!');
+      },
+    },
+    {
+      icon: 'help-circle-outline',
+      title: 'I need help',
+      onPress: () => {
+        closeSettings();
+        Alert.alert('Help', 'Contact us at support@kidstory.ai');
+      },
+    },
+    {
+      icon: 'document-text-outline',
+      title: 'Terms of use',
+      onPress: () => {
+        closeSettings();
+        Alert.alert('Terms of Use', 'Terms of use content will be displayed here.');
+      },
+    },
+    {
+      icon: 'shield-checkmark-outline',
+      title: 'Privacy policy',
+      onPress: () => {
+        closeSettings();
+        Alert.alert('Privacy Policy', 'Privacy policy content will be displayed here.');
+      },
+    },
+    {
+      icon: 'card-outline',
+      title: 'Manage subscription',
+      onPress: () => {
+        closeSettings();
+        Alert.alert('Subscription', 'Subscription management will be available soon!');
+      },
+    },
+    {
+      icon: 'trash-outline',
+      title: 'Delete all photos',
+      onPress: handleDeleteAllPhotos,
+      destructive: true,
+    },
+    {
+      icon: 'close-circle-outline',
+      title: 'Delete account',
+      onPress: handleDeleteAccount,
+      destructive: true,
+    },
+  ];
+
   // ── Loading ──────────────────────────────────────────
   if (loading) {
     return (
@@ -69,39 +171,91 @@ export default function LibraryScreen({ navigation, onNavigateToCreate }) {
   // ── Empty state ──────────────────────────────────────
   if (stories.length === 0) {
     return (
-      <LinearGradient colors={colors.mainBg} style={styles.container}>
-        {/* Reset button (top right) */}
-        <TouchableOpacity style={styles.resetButton} onPress={handleResetOnboarding} delayPressIn={70}>
-          <Ionicons name="refresh" size={24} color="rgba(255,255,255,0.6)" />
-        </TouchableOpacity>
-
-        <Text style={styles.pageTitle}>My Stories</Text>
-        <View style={styles.emptyWrapper}>
-          <TouchableOpacity
-            activeOpacity={0.85}
-            onPress={() => {
-              if (onNavigateToCreate) {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                onNavigateToCreate();
-              }
-            }}
-          >
-            <View style={styles.emptyCard}>
-              {/* sparkles inside empty card */}
-              <Sparkle style={{ top: 20,  right: 26 }}  size={9} color="rgba(196,181,253,0.4)" />
-              <Sparkle style={{ top: 60,  left: 22 }}   size={5} color="rgba(255,255,255,0.22)" />
-              <Sparkle style={{ bottom: 34, left: 42 }} size={7} color="rgba(196,181,253,0.32)" />
-              <Sparkle style={{ bottom: 18, right: 58 }} size={4} color="rgba(251,191,36,0.28)" />
-
-              <View style={styles.emptyIconCircle}>
-                <Ionicons name="book-outline" size={36} color={colors.primary} />
-              </View>
-              <Text style={styles.emptyTitle}>No stories yet!</Text>
-              <Text style={styles.emptySubtext}>Create your first magical story</Text>
-            </View>
+      <>
+        <LinearGradient colors={colors.mainBg} style={styles.container}>
+          {/* Settings button (top right) */}
+          <TouchableOpacity style={styles.resetButton} onPress={openSettings} activeOpacity={0.7}>
+            <Ionicons name="settings-outline" size={24} color="rgba(255,255,255,0.6)" />
           </TouchableOpacity>
-        </View>
-      </LinearGradient>
+
+          <Text style={styles.pageTitle}>My Stories</Text>
+          <View style={styles.emptyWrapper}>
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => {
+                if (onNavigateToCreate) {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                  onNavigateToCreate();
+                }
+              }}
+            >
+              <View style={styles.emptyCard}>
+                {/* sparkles inside empty card */}
+                <Sparkle style={{ top: 20,  right: 26 }}  size={9} color="rgba(196,181,253,0.4)" />
+                <Sparkle style={{ top: 60,  left: 22 }}   size={5} color="rgba(255,255,255,0.22)" />
+                <Sparkle style={{ bottom: 34, left: 42 }} size={7} color="rgba(196,181,253,0.32)" />
+                <Sparkle style={{ bottom: 18, right: 58 }} size={4} color="rgba(251,191,36,0.28)" />
+
+                <View style={styles.emptyIconCircle}>
+                  <Ionicons name="book-outline" size={36} color={colors.primary} />
+                </View>
+                <Text style={styles.emptyTitle}>No stories yet!</Text>
+                <Text style={styles.emptySubtext}>Create your first magical story</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </LinearGradient>
+
+        {/* ── Settings Modal ── */}
+        <Modal
+          visible={settingsVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={closeSettings}
+        >
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={closeSettings}
+          >
+            <TouchableOpacity
+              style={styles.modalContainer}
+              activeOpacity={1}
+              onPress={(e) => e.stopPropagation()}
+            >
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Settings</Text>
+                <TouchableOpacity onPress={closeSettings} style={styles.closeButton}>
+                  <Ionicons name="close" size={28} color="#FFFFFF" />
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView style={styles.settingsList} showsVerticalScrollIndicator={false}>
+                {settingsOptions.map((option, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={styles.settingItem}
+                    onPress={option.onPress}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.settingLeft}>
+                      <Ionicons
+                        name={option.icon}
+                        size={24}
+                        color={option.destructive ? '#EF4444' : '#A78BFA'}
+                      />
+                      <Text style={[styles.settingText, option.destructive && styles.settingTextDestructive]}>
+                        {option.title}
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.4)" />
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </Modal>
+      </>
     );
   }
 
@@ -145,30 +299,82 @@ export default function LibraryScreen({ navigation, onNavigateToCreate }) {
 
   // ── List ──────────────────────────────────────────────
   return (
-    <LinearGradient colors={colors.mainBg} style={styles.container}>
-      {/* subtle background sparkles */}
-      <View pointerEvents="none" style={StyleSheet.absoluteFillObject}>
-        <Sparkle style={{ top: 105, right: 34 }}  size={7} color="rgba(255,255,255,0.1)" />
-        <Sparkle style={{ top: 260, left: 20 }}   size={5} color="rgba(196,181,253,0.18)" />
-        <Sparkle style={{ bottom: 160, right: 52 }} size={6} color="rgba(251,191,36,0.14)" />
-      </View>
+    <>
+      <LinearGradient colors={colors.mainBg} style={styles.container}>
+        {/* subtle background sparkles */}
+        <View pointerEvents="none" style={StyleSheet.absoluteFillObject}>
+          <Sparkle style={{ top: 105, right: 34 }}  size={7} color="rgba(255,255,255,0.1)" />
+          <Sparkle style={{ top: 260, left: 20 }}   size={5} color="rgba(196,181,253,0.18)" />
+          <Sparkle style={{ bottom: 160, right: 52 }} size={6} color="rgba(251,191,36,0.14)" />
+        </View>
 
-      {/* Reset button (top right) */}
-      <TouchableOpacity style={styles.resetButton} onPress={handleResetOnboarding}>
-        <Ionicons name="refresh" size={24} color="rgba(255,255,255,0.6)" />
-      </TouchableOpacity>
+        {/* Settings button (top right) */}
+        <TouchableOpacity style={styles.resetButton} onPress={openSettings} activeOpacity={0.7}>
+          <Ionicons name="settings-outline" size={24} color="rgba(255,255,255,0.6)" />
+        </TouchableOpacity>
 
-      <Text style={styles.pageTitle}>My Stories</Text>
-      <FlatList
-        data={stories}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        numColumns={2}
-        columnWrapperStyle={styles.row}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 100 }}
-      />
-    </LinearGradient>
+        <Text style={styles.pageTitle}>My Stories</Text>
+        <FlatList
+          data={stories}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          numColumns={2}
+          columnWrapperStyle={styles.row}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 100 }}
+        />
+      </LinearGradient>
+
+      {/* ── Settings Modal ── */}
+      <Modal
+        visible={settingsVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={closeSettings}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={closeSettings}
+        >
+          <TouchableOpacity
+            style={styles.modalContainer}
+            activeOpacity={1}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Settings</Text>
+              <TouchableOpacity onPress={closeSettings} style={styles.closeButton}>
+                <Ionicons name="close" size={28} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.settingsList} showsVerticalScrollIndicator={false}>
+              {settingsOptions.map((option, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.settingItem}
+                  onPress={option.onPress}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.settingLeft}>
+                    <Ionicons
+                      name={option.icon}
+                      size={24}
+                      color={option.destructive ? '#EF4444' : '#A78BFA'}
+                    />
+                    <Text style={[styles.settingText, option.destructive && styles.settingTextDestructive]}>
+                      {option.title}
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.4)" />
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+    </>
   );
 }
 
@@ -312,5 +518,67 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.65)',
     textAlign: 'center',
     marginTop: 80,
+  },
+
+  // ── Settings Modal ────────────────────────────────
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'flex-end',
+  },
+  modalContainer: {
+    backgroundColor: '#1E1145',
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    paddingBottom: 40,
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 24,
+    paddingTop: 24,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(139,92,246,0.2)',
+  },
+  modalTitle: {
+    fontSize: 28,
+    fontFamily: 'Rounded-Black',
+    color: '#FFFFFF',
+  },
+  closeButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(139,92,246,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  settingsList: {
+    paddingHorizontal: 24,
+    paddingTop: 8,
+  },
+  settingItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 18,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(139,92,246,0.1)',
+  },
+  settingLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  settingText: {
+    fontSize: 17,
+    fontFamily: 'Rounded-Semibold',
+    color: '#FFFFFF',
+  },
+  settingTextDestructive: {
+    color: '#EF4444',
   },
 });

@@ -346,19 +346,27 @@ export default function CreateScreen({ navigation }) {
       ) : (
         /* ── Photo selected ── */
         <View style={styles.contentArea}>
-          <GHTouchableOpacity style={styles.photoTouchable} onPress={pickImage} activeOpacity={0.9} delayPressIn={150}>
+          <View style={styles.photoTouchable}>
             <View style={styles.photoGlow}>
               <View style={styles.photoFrame}>
                 <Image source={{ uri: photoUri }} style={styles.photo} />
-                <GHTouchableOpacity style={styles.deleteBadge} onPress={removePhoto} activeOpacity={0.7} delayPressIn={70}>
+                <TouchableOpacity
+                  style={styles.deleteBadge}
+                  onPress={removePhoto}
+                  activeOpacity={0.7}
+                >
                   <Ionicons name="trash" size={18} color="#fff" />
-                </GHTouchableOpacity>
-                <GHTouchableOpacity style={styles.editBadge} onPress={pickImage} activeOpacity={0.7} delayPressIn={70}>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.editBadge}
+                  onPress={pickImage}
+                  activeOpacity={0.7}
+                >
                   <Ionicons name="create" size={18} color="#fff" />
-                </GHTouchableOpacity>
+                </TouchableOpacity>
               </View>
             </View>
-          </GHTouchableOpacity>
+          </View>
 
           {/* Prompt display — tap opens modal */}
           <LinearGradient
@@ -382,19 +390,14 @@ export default function CreateScreen({ navigation }) {
       {/* Create button - always visible at bottom */}
       <View style={styles.bottomBar}>
         <TouchableOpacity
-          style={[styles.createBtn, (!photoUri || !prompt.trim()) && styles.createBtnDisabled]}
+          style={styles.createBtn}
           onPress={handleCreate}
           activeOpacity={0.82}
           delayPressIn={70}
         >
-          <LinearGradient
-            colors={(photoUri && prompt.trim()) ? ['#FBBF24', '#F59E0B'] : ['#3A3550', '#4A4560']}
-            style={styles.createBtnInner}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-          >
+          <View style={styles.createBtnInner}>
             <Text style={styles.createBtnText}>Create Story ✨</Text>
-          </LinearGradient>
+          </View>
         </TouchableOpacity>
       </View>
 
@@ -568,12 +571,22 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   photoFrame: {
+    width: 220,
+    height: 275,
     borderRadius: 24,
-    overflow: 'hidden',
     borderWidth: 4,
     borderColor: 'rgba(255,255,255,0.3)',
+    position: 'relative',
   },
-  photo: { width: 220, height: 275 },
+  photo: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    borderRadius: 20,
+    zIndex: 0,
+  },
   deleteBadge: {
     position: 'absolute',
     top: 12,
@@ -590,7 +603,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 8,
-    elevation: 4,
+    elevation: 6,
+    zIndex: 100,
   },
   editBadge: {
     position: 'absolute',
@@ -608,7 +622,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 8,
-    elevation: 4,
+    elevation: 6,
+    zIndex: 100,
   },
 
   // ── Prompt input (display / tap-to-open) ──────────
@@ -670,18 +685,17 @@ const styles = StyleSheet.create({
   createBtn: {
     borderRadius: 28,
     overflow: 'hidden',
-    shadowColor: '#FBBF24',
+    shadowColor: '#8B5CF6',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.5,
     shadowRadius: 20,
     elevation: 10,
   },
-  createBtnDisabled: {
-    shadowOpacity: 0.15,
-  },
   createBtnInner: {
     paddingVertical: 20,
     alignItems: 'center',
+    backgroundColor: '#8B5CF6',
+    borderRadius: 28,
   },
   createBtnText: {
     fontSize: 22,
