@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   TextInput,
   Image,
   ActivityIndicator,
@@ -12,7 +11,9 @@ import {
   Modal,
   Animated,
   Easing,
+  TouchableOpacity,
 } from 'react-native';
+import { TouchableOpacity as GHTouchableOpacity } from 'react-native-gesture-handler';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
@@ -230,12 +231,13 @@ export default function CreateScreen({ navigation }) {
       {/* Title */}
       <View style={styles.titleRow}>
         <Text style={styles.pageTitle}>Create a Story</Text>
+        <Text style={styles.pageSubtitle}>make your child the main character</Text>
       </View>
 
       {!photoUri ? (
         /* ── No photo: upload card + prompt display ── */
         <View style={styles.centerWrapper}>
-          <TouchableOpacity onPress={pickImage} activeOpacity={0.85} style={styles.uploadCardOuter}>
+          <GHTouchableOpacity onPress={pickImage} activeOpacity={0.85} delayPressIn={150} style={styles.uploadCardOuter}>
             <LinearGradient
               colors={['rgba(139,92,246,0.28)', 'rgba(167,139,250,0.22)']}
               start={{ x: 0, y: 0 }}
@@ -255,7 +257,7 @@ export default function CreateScreen({ navigation }) {
               <Text style={styles.uploadTitle}>Add your child's photo</Text>
               <Text style={styles.uploadSubtext}>Photos are deleted after creating the story. Make your child the main character!</Text>
             </LinearGradient>
-          </TouchableOpacity>
+          </GHTouchableOpacity>
 
           {/* Prompt display — tap opens modal */}
           <LinearGradient
@@ -276,60 +278,59 @@ export default function CreateScreen({ navigation }) {
         </View>
       ) : (
         /* ── Photo selected ── */
-        <>
-          <View style={styles.contentArea}>
-            <TouchableOpacity style={styles.photoTouchable} onPress={pickImage} activeOpacity={0.9}>
-              <View style={styles.photoGlow}>
-                <View style={styles.photoFrame}>
-                  <Image source={{ uri: photoUri }} style={styles.photo} />
-                  <TouchableOpacity style={styles.deleteBadge} onPress={removePhoto} activeOpacity={0.7}>
-                    <Ionicons name="trash" size={18} color="#fff" />
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.editBadge} onPress={pickImage} activeOpacity={0.7}>
-                    <Ionicons name="create" size={18} color="#fff" />
-                  </TouchableOpacity>
-                </View>
+        <View style={styles.contentArea}>
+          <GHTouchableOpacity style={styles.photoTouchable} onPress={pickImage} activeOpacity={0.9} delayPressIn={150}>
+            <View style={styles.photoGlow}>
+              <View style={styles.photoFrame}>
+                <Image source={{ uri: photoUri }} style={styles.photo} />
+                <GHTouchableOpacity style={styles.deleteBadge} onPress={removePhoto} activeOpacity={0.7} delayPressIn={70}>
+                  <Ionicons name="trash" size={18} color="#fff" />
+                </GHTouchableOpacity>
+                <GHTouchableOpacity style={styles.editBadge} onPress={pickImage} activeOpacity={0.7} delayPressIn={70}>
+                  <Ionicons name="create" size={18} color="#fff" />
+                </GHTouchableOpacity>
               </View>
-            </TouchableOpacity>
+            </View>
+          </GHTouchableOpacity>
 
-            {/* Prompt display — tap opens modal */}
-            <LinearGradient
-              colors={['rgba(167,139,250,0.15)', 'rgba(139,92,246,0.12)']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.inputCard}
-            >
-              <TouchableOpacity style={styles.inputTouchArea} onPress={openPromptModal} activeOpacity={0.7}>
-                <Text style={[styles.inputText, !prompt && styles.inputPlaceholder]} numberOfLines={2}>
-                  {prompt || 'What kind of story?'}
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.diceBtn} onPress={rollPrompt} activeOpacity={0.7}>
-                <Text style={styles.diceEmoji}>🎲</Text>
-              </TouchableOpacity>
-            </LinearGradient>
-          </View>
-
-          {/* Create button pinned bottom */}
-          <View style={styles.bottomBar}>
-            <TouchableOpacity
-              style={[styles.createBtn, !prompt.trim() && styles.createBtnDisabled]}
-              onPress={handleCreate}
-              disabled={!prompt.trim()}
-              activeOpacity={0.82}
-            >
-              <LinearGradient
-                colors={prompt.trim() ? ['#FBBF24', '#F59E0B'] : ['#3A3550', '#4A4560']}
-                style={styles.createBtnInner}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-              >
-                <Text style={styles.createBtnText}>Create Story ✨</Text>
-              </LinearGradient>
+          {/* Prompt display — tap opens modal */}
+          <LinearGradient
+            colors={['rgba(167,139,250,0.15)', 'rgba(139,92,246,0.12)']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.inputCard}
+          >
+            <TouchableOpacity style={styles.inputTouchArea} onPress={openPromptModal} activeOpacity={0.7}>
+              <Text style={[styles.inputText, !prompt && styles.inputPlaceholder]} numberOfLines={2}>
+                {prompt || 'What kind of story?'}
+              </Text>
             </TouchableOpacity>
-          </View>
-        </>
+            <TouchableOpacity style={styles.diceBtn} onPress={rollPrompt} activeOpacity={0.7}>
+              <Text style={styles.diceEmoji}>🎲</Text>
+            </TouchableOpacity>
+          </LinearGradient>
+        </View>
       )}
+
+      {/* Create button - always visible at bottom */}
+      <View style={styles.bottomBar}>
+        <TouchableOpacity
+          style={[styles.createBtn, (!photoUri || !prompt.trim()) && styles.createBtnDisabled]}
+          onPress={handleCreate}
+          disabled={!photoUri || !prompt.trim()}
+          activeOpacity={0.82}
+          delayPressIn={70}
+        >
+          <LinearGradient
+            colors={(photoUri && prompt.trim()) ? ['#FBBF24', '#F59E0B'] : ['#3A3550', '#4A4560']}
+            style={styles.createBtnInner}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+          >
+            <Text style={styles.createBtnText}>Create Story ✨</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      </View>
 
       {/* ── Prompt Modal ── */}
       <Modal
@@ -414,8 +415,8 @@ const styles = StyleSheet.create({
 
   // ── Title ─────────────────────────────────────────
   titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
     paddingHorizontal: 28,
     paddingTop: 68,
     marginBottom: 12,
@@ -425,6 +426,12 @@ const styles = StyleSheet.create({
     fontFamily: 'Rounded-Black',
     color: '#FFFFFF',
     letterSpacing: -0.6,
+  },
+  pageSubtitle: {
+    fontSize: 16,
+    fontFamily: 'Rounded-Medium',
+    color: 'rgba(255,255,255,0.6)',
+    marginTop: 4,
   },
 
   // ── No-photo: upload card ─────────────────────────
@@ -538,7 +545,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: 38,
-    paddingHorizontal: 20,
+    paddingLeft: 20,
+    paddingRight: 8,
     paddingVertical: 26,
     borderWidth: 3,
     borderColor: 'rgba(167,139,250,0.3)',
@@ -564,7 +572,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Rounded-Semibold',
   },
   diceBtn: {
-    marginLeft: 12,
+    marginLeft: 8,
     width: 45,
     height: 45,
     borderRadius: 26,
@@ -584,7 +592,7 @@ const styles = StyleSheet.create({
   // ── Create button ─────────────────────────────────
   bottomBar: {
     paddingHorizontal: 28,
-    paddingBottom: 100,
+    paddingBottom: 40,
     paddingTop: 16,
   },
   createBtn: {
@@ -605,9 +613,9 @@ const styles = StyleSheet.create({
   },
   createBtnText: {
     fontSize: 22,
-    fontFamily: 'Rounded-Black',
+    fontFamily: 'SFPro-Heavy',
     color: '#FFFFFF',
-    letterSpacing: 0.3,
+    letterSpacing: -0.5,
   },
 
   // ── Prompt Modal ──────────────────────────────────

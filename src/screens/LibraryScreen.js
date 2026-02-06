@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Image, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Image, Alert } from 'react-native';
+import { TouchableOpacity } from 'react-native-gesture-handler';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -69,7 +70,7 @@ export default function LibraryScreen({ navigation }) {
     return (
       <LinearGradient colors={colors.mainBg} style={styles.container}>
         {/* Reset button (top right) */}
-        <TouchableOpacity style={styles.resetButton} onPress={handleResetOnboarding}>
+        <TouchableOpacity style={styles.resetButton} onPress={handleResetOnboarding} delayPressIn={70}>
           <Ionicons name="refresh" size={24} color="rgba(255,255,255,0.6)" />
         </TouchableOpacity>
 
@@ -99,6 +100,7 @@ export default function LibraryScreen({ navigation }) {
       style={styles.card}
       onPress={() => navigation.navigate('StoryDetail', { storyId: item.id })}
       activeOpacity={0.85}
+      delayPressIn={70}
     >
       {item.illustrationUrl ? (
         <Image source={{ uri: item.illustrationUrl }} style={styles.cardImage} />

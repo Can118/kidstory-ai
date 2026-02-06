@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect, memo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Animated, Easing } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, Animated, Easing } from 'react-native';
+import { TouchableOpacity } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
@@ -42,9 +43,10 @@ function SwipeableScreens() {
 
   // Pan gesture with optimized configuration for smoothness
   const pan = Gesture.Pan()
-    .activeOffsetX([-10, 10]) // Require 10px horizontal movement before activating
-    .failOffsetY([-10, 10]) // Cancel if vertical movement exceeds 10px
+    .activeOffsetX([-3, 3]) // Require only 3px horizontal movement before activating
+    .failOffsetY([-20, 20]) // Cancel if vertical movement exceeds 20px
     .enableTrackpadTwoFingerGesture(true)
+    .maxPointers(1) // Only allow single finger gestures
     .onStart(() => {
       // Cancel any ongoing animation when new gesture starts
       if (currentAnimation.current) {
@@ -198,6 +200,7 @@ const CustomTabBar = memo(function CustomTabBar({ activeIndex, onTabPress }) {
               onTabPress(index);
             }}
             activeOpacity={0.6}
+            delayPressIn={70}
           >
             {/* Subtle pill behind active icon */}
             {isActive && <View style={styles.activePill} />}
