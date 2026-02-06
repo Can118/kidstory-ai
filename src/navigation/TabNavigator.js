@@ -177,7 +177,7 @@ const CustomTabBar = memo(function CustomTabBar({ activeIndex, onTabPress }) {
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={[styles.tabBar, { paddingBottom: insets.bottom + 8 }]}>
+    <View style={[styles.tabBar, { paddingBottom: insets.bottom - 20 }]}>
       {TABS.map((tab, index) => {
         const isActive = activeIndex === index;
 

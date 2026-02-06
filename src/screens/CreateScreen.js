@@ -252,8 +252,8 @@ export default function CreateScreen({ navigation }) {
                 style={styles.uploadIcon}
               />
 
-              <Text style={styles.uploadTitle}>Add Your Photo</Text>
-              <Text style={styles.uploadSubtext}>Tap to choose a picture</Text>
+              <Text style={styles.uploadTitle}>Add your child's photo</Text>
+              <Text style={styles.uploadSubtext}>Photos are deleted after creating the story. Make your child the main character!</Text>
             </LinearGradient>
           </TouchableOpacity>
 
@@ -440,8 +440,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   uploadCard: {
-    borderRadius: 32,
-    padding: 50,
+    borderRadius: 52,
+    padding: 20,
     alignItems: 'center',
     borderWidth: 2,
     borderColor: 'rgba(167,139,250,0.4)',
@@ -537,10 +537,10 @@ const styles = StyleSheet.create({
     width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 26,
+    borderRadius: 38,
     paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderWidth: 2,
+    paddingVertical: 26,
+    borderWidth: 3,
     borderColor: 'rgba(167,139,250,0.3)',
     shadowColor: '#A78BFA',
     shadowOffset: { width: 0, height: 6 },
@@ -565,8 +565,8 @@ const styles = StyleSheet.create({
   },
   diceBtn: {
     marginLeft: 12,
-    width: 52,
-    height: 52,
+    width: 45,
+    height: 45,
     borderRadius: 26,
     backgroundColor: 'rgba(167,139,250,0.25)',
     borderWidth: 2,
