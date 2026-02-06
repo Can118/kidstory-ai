@@ -17,7 +17,7 @@ const TABS = [
 ];
 
 // ── Main swipeable container holding both screens ────
-function SwipeableScreens() {
+function SwipeableScreens({ navigation }) {
   const [activeIndex, setActiveIndex] = useState(0);
   const translateX = useRef(new Animated.Value(0)).current;
   const isAnimating = useRef(false);
@@ -168,10 +168,10 @@ function SwipeableScreens() {
           transform: [{ translateX }],
         }}>
           <View style={{ width: SCREEN_WIDTH }}>
-            <CreateScreen />
+            <CreateScreen navigation={navigation} />
           </View>
           <View style={{ width: SCREEN_WIDTH }}>
-            <LibraryScreen />
+            <LibraryScreen navigation={navigation} onNavigateToCreate={() => setActiveIndex(0)} />
           </View>
         </Animated.View>
       </GestureDetector>
@@ -230,8 +230,8 @@ const CustomTabBar = memo(function CustomTabBar({ activeIndex, onTabPress }) {
   );
 });
 
-export default function TabNavigator() {
-  return <SwipeableScreens />;
+export default function TabNavigator({ navigation }) {
+  return <SwipeableScreens navigation={navigation} />;
 }
 
 const styles = StyleSheet.create({

@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, FlatList, Image, Alert } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import colors from '../theme/colors';
 import { useStoryContext } from '../context/StoryContext';
@@ -34,7 +35,7 @@ function Sparkle({ style, size = 7, color = '#C4B5FD' }) {
   );
 }
 
-export default function LibraryScreen({ navigation }) {
+export default function LibraryScreen({ navigation, onNavigateToCreate }) {
   const { stories, loading } = useStoryContext();
 
   const handleResetOnboarding = () => {
@@ -76,19 +77,29 @@ export default function LibraryScreen({ navigation }) {
 
         <Text style={styles.pageTitle}>My Stories</Text>
         <View style={styles.emptyWrapper}>
-          <View style={styles.emptyCard}>
-            {/* sparkles inside empty card */}
-            <Sparkle style={{ top: 20,  right: 26 }}  size={9} color="rgba(196,181,253,0.4)" />
-            <Sparkle style={{ top: 60,  left: 22 }}   size={5} color="rgba(255,255,255,0.22)" />
-            <Sparkle style={{ bottom: 34, left: 42 }} size={7} color="rgba(196,181,253,0.32)" />
-            <Sparkle style={{ bottom: 18, right: 58 }} size={4} color="rgba(251,191,36,0.28)" />
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={() => {
+              if (onNavigateToCreate) {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                onNavigateToCreate();
+              }
+            }}
+          >
+            <View style={styles.emptyCard}>
+              {/* sparkles inside empty card */}
+              <Sparkle style={{ top: 20,  right: 26 }}  size={9} color="rgba(196,181,253,0.4)" />
+              <Sparkle style={{ top: 60,  left: 22 }}   size={5} color="rgba(255,255,255,0.22)" />
+              <Sparkle style={{ bottom: 34, left: 42 }} size={7} color="rgba(196,181,253,0.32)" />
+              <Sparkle style={{ bottom: 18, right: 58 }} size={4} color="rgba(251,191,36,0.28)" />
 
-            <View style={styles.emptyIconCircle}>
-              <Ionicons name="book-outline" size={36} color={colors.primary} />
+              <View style={styles.emptyIconCircle}>
+                <Ionicons name="book-outline" size={36} color={colors.primary} />
+              </View>
+              <Text style={styles.emptyTitle}>No stories yet!</Text>
+              <Text style={styles.emptySubtext}>Create your first magical story</Text>
             </View>
-            <Text style={styles.emptyTitle}>No stories yet!</Text>
-            <Text style={styles.emptySubtext}>Create your first magical story</Text>
-          </View>
+          </TouchableOpacity>
         </View>
       </LinearGradient>
     );

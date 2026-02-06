@@ -16,6 +16,7 @@ import {
 import { TouchableOpacity as GHTouchableOpacity } from 'react-native-gesture-handler';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
+import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
 import colors from '../theme/colors';
 import promptTemplates from '../data/promptTemplates';
@@ -64,6 +65,9 @@ export default function CreateScreen({ navigation }) {
   const cardOpacity = useRef(new Animated.Value(0)).current;
   const cardScale = useRef(new Animated.Value(0.96)).current;
   const modalInputRef = useRef(null);
+
+  // ── Photo upload highlight animation ──
+  const uploadHighlight = useRef(new Animated.Value(0)).current;
 
   const openPromptModal = () => {
     // Reset animation values to starting position
@@ -167,8 +171,44 @@ export default function CreateScreen({ navigation }) {
     setPhotoUri(null);
   };
 
+  const triggerUploadHighlight = () => {
+    // Reset to 0 first
+    uploadHighlight.setValue(0);
+
+    // Haptic feedback to alert user
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+
+    // Sequence: fast fade in (0.25s) -> hold (1.5s) -> slow fade out (1.25s)
+    Animated.sequence([
+      // Fade in (fast)
+      Animated.timing(uploadHighlight, {
+        toValue: 1,
+        duration: 100,
+        easing: Easing.out(Easing.ease),
+        useNativeDriver: false,
+      }),
+      // Hold
+      Animated.delay(1000),
+      // Fade out (slow)
+      Animated.timing(uploadHighlight, {
+        toValue: 0,
+        duration: 500,
+        easing: Easing.in(Easing.ease),
+        useNativeDriver: false,
+      }),
+    ]).start();
+  };
+
   const handleCreate = async () => {
-    if (!photoUri || !prompt.trim()) return;
+    // Check if photo is missing
+    if (!photoUri) {
+      triggerUploadHighlight();
+      return;
+    }
+
+    // Check if prompt is missing
+    if (!prompt.trim()) return;
+
     setIsLoading(true);
     try {
       const story = await createStory(photoUri, prompt);
@@ -237,13 +277,39 @@ export default function CreateScreen({ navigation }) {
       {!photoUri ? (
         /* ── No photo: upload card + prompt display ── */
         <View style={styles.centerWrapper}>
-          <GHTouchableOpacity onPress={pickImage} activeOpacity={0.85} delayPressIn={150} style={styles.uploadCardOuter}>
-            <LinearGradient
-              colors={['rgba(139,92,246,0.28)', 'rgba(167,139,250,0.22)']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.uploadCard}
-            >
+          <Animated.View
+            style={[
+              styles.uploadCardOuterWrapper,
+              {
+                shadowColor: uploadHighlight.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: ['rgba(139,92,246,0)', 'rgba(244,114,182,1)'],
+                }),
+                shadowOpacity: uploadHighlight.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, 0.8],
+                }),
+                shadowRadius: uploadHighlight.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, 32],
+                }),
+                shadowOffset: {
+                  width: 0,
+                  height: uploadHighlight.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0, 8],
+                  }),
+                },
+              },
+            ]}
+          >
+            <GHTouchableOpacity onPress={pickImage} activeOpacity={0.85} delayPressIn={150} style={styles.uploadCardOuter}>
+              <LinearGradient
+                colors={['rgba(139,92,246,0.28)', 'rgba(167,139,250,0.22)']}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.uploadCard}
+              >
               <Sparkle style={{ top: 20,  right: 26 }}  size={9} color="rgba(196,181,253,0.5)" />
               <Sparkle style={{ top: 68,  left: 22 }}   size={5} color="rgba(255,255,255,0.3)" />
               <Sparkle style={{ bottom: 40, left: 44 }} size={7} color="rgba(196,181,253,0.4)" />
@@ -258,6 +324,7 @@ export default function CreateScreen({ navigation }) {
               <Text style={styles.uploadSubtext}>Photos deleted after use.</Text>
             </LinearGradient>
           </GHTouchableOpacity>
+          </Animated.View>
 
           {/* Prompt display — tap opens modal */}
           <LinearGradient
@@ -317,7 +384,6 @@ export default function CreateScreen({ navigation }) {
         <TouchableOpacity
           style={[styles.createBtn, (!photoUri || !prompt.trim()) && styles.createBtnDisabled]}
           onPress={handleCreate}
-          disabled={!photoUri || !prompt.trim()}
           activeOpacity={0.82}
           delayPressIn={70}
         >
@@ -441,6 +507,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingHorizontal: 24,
   },
+  uploadCardOuterWrapper: {
+    width: '87%',
+    borderRadius: 32,
+    elevation: 10,
+  },
   uploadCardOuter: {
     width: '100%',
     borderRadius: 32,
@@ -563,7 +634,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   inputText: {
-    fontSize: 18,
+    fontSize: 19,
     fontFamily: 'Rounded-Bold',
     color: '#FFFFFF',
     lineHeight: 26,
