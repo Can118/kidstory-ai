@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
   // ── Reset Button ──────────────────────────────────
   resetButton: {
     position: 'absolute',
-    top: 68,
+    top: 78,
     right: 24,
     zIndex: 10,
     width: 40,
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Rounded-Black',
     color: '#FFFFFF',
     paddingHorizontal: 24,
-    paddingTop: 68,
+    paddingTop: 78,
     marginBottom: 24,
   },
 
@@ -255,11 +255,11 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 24,
+    paddingHorizontal: 48,
   },
   emptyCard: {
     width: '100%',
-    borderRadius: 28,
+    borderRadius: 48,
     padding: 44,
     alignItems: 'center',
     backgroundColor: 'rgba(30,17,69,0.7)',

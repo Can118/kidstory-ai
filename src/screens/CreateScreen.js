@@ -231,7 +231,7 @@ export default function CreateScreen({ navigation }) {
       {/* Title */}
       <View style={styles.titleRow}>
         <Text style={styles.pageTitle}>Create a Story</Text>
-        <Text style={styles.pageSubtitle}>make your child the main character</Text>
+        <Text style={styles.pageSubtitle}>Make your child the main character</Text>
       </View>
 
       {!photoUri ? (
@@ -255,7 +255,7 @@ export default function CreateScreen({ navigation }) {
               />
 
               <Text style={styles.uploadTitle}>Add your child's photo</Text>
-              <Text style={styles.uploadSubtext}>Photos are deleted after creating the story. Make your child the main character!</Text>
+              <Text style={styles.uploadSubtext}>Photos deleted after use.</Text>
             </LinearGradient>
           </GHTouchableOpacity>
 
@@ -418,7 +418,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     alignItems: 'flex-start',
     paddingHorizontal: 28,
-    paddingTop: 68,
+    paddingTop: 78,
     marginBottom: 12,
   },
   pageTitle: {
@@ -431,7 +431,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Rounded-Medium',
     color: 'rgba(255,255,255,0.6)',
-    marginTop: 4,
+    marginTop: 6,
   },
 
   // ── No-photo: upload card ─────────────────────────
@@ -447,7 +447,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   uploadCard: {
-    borderRadius: 52,
+    borderRadius: 48,
     padding: 20,
     alignItems: 'center',
     borderWidth: 2,
@@ -468,13 +468,14 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontFamily: 'Rounded-Black',
     color: '#FFFFFF',
-    marginBottom: 8,
-    letterSpacing: -0.3,
+    marginBottom: 12,
+    letterSpacing: -0.2,
   },
   uploadSubtext: {
-    fontSize: 16,
+    fontSize: 14,
     fontFamily: 'Rounded-Semibold',
     color: 'rgba(255,255,255,0.75)',
+    marginBottom: 4
   },
 
   // ── Photo-selected layout ─────────────────────────
@@ -547,7 +548,7 @@ const styles = StyleSheet.create({
     borderRadius: 38,
     paddingLeft: 20,
     paddingRight: 8,
-    paddingVertical: 26,
+    paddingVertical: 16,
     borderWidth: 3,
     borderColor: 'rgba(167,139,250,0.3)',
     shadowColor: '#A78BFA',
