@@ -584,7 +584,7 @@ const styles = StyleSheet.create({
   // ── Create button ─────────────────────────────────
   bottomBar: {
     paddingHorizontal: 28,
-    paddingBottom: 40,
+    paddingBottom: 100,
     paddingTop: 16,
   },
   createBtn: {

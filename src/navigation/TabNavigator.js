@@ -20,7 +20,9 @@ function SwipeableScreens() {
   const [activeIndex, setActiveIndex] = useState(0);
   const translateX = useRef(new Animated.Value(0)).current;
   const isAnimating = useRef(false);
-  const lastPosition = useRef(0);
+  const currentAnimation = useRef(null);
+  const activeIndexRef = useRef(0); // Track current index without state delays
+  const isGestureDriven = useRef(false); // Flag to distinguish gesture vs tab press
 
   // Enhanced resistance function for ultra-smooth edge behavior
   const applyResistance = (position, limit, isNegative = false) => {
@@ -43,28 +45,32 @@ function SwipeableScreens() {
     .activeOffsetX([-10, 10]) // Require 10px horizontal movement before activating
     .failOffsetY([-10, 10]) // Cancel if vertical movement exceeds 10px
     .enableTrackpadTwoFingerGesture(true)
+    .onStart(() => {
+      // Cancel any ongoing animation when new gesture starts
+      if (currentAnimation.current) {
+        currentAnimation.current.stop();
+        currentAnimation.current = null;
+      }
+      isAnimating.current = false;
+      isGestureDriven.current = true;
+    })
     .onChange((event) => {
-      if (isAnimating.current) return;
-
       const { translationX } = event;
-      const baseOffset = -activeIndex * SCREEN_WIDTH;
+      const baseOffset = -activeIndexRef.current * SCREEN_WIDTH;
       let newPosition = baseOffset + translationX;
 
-      // Apply smooth resistance at edges with exponential curve
+      // Completely block movement beyond boundaries
       if (newPosition > 0) {
-        // Resistance when trying to go before first screen
-        newPosition = applyResistance(translationX, 0, false);
+        // Block swiping right on first screen (Create)
+        newPosition = 0;
       } else if (newPosition < -SCREEN_WIDTH) {
-        // Resistance when trying to go after last screen
-        newPosition = applyResistance(newPosition, -SCREEN_WIDTH, true);
+        // Block swiping left on last screen (Library)
+        newPosition = -SCREEN_WIDTH;
       }
 
       translateX.setValue(newPosition);
-      lastPosition.current = newPosition;
     })
     .onEnd((event) => {
-      if (isAnimating.current) return;
-
       const { translationX, velocityX } = event;
 
       // Dynamic threshold based on velocity for ultra-responsive feel
@@ -73,83 +79,85 @@ function SwipeableScreens() {
       const isQuickSwipe = Math.abs(velocityX) > velocityThreshold;
       const threshold = isQuickSwipe ? SCREEN_WIDTH * 0.15 : baseThreshold;
 
-      let targetIndex = activeIndex;
+      let targetIndex = activeIndexRef.current;
 
       // Intelligent navigation decision
       if (translationX < -threshold || velocityX < -velocityThreshold) {
         // Swipe left
-        if (activeIndex < 1) {
+        if (activeIndexRef.current < 1) {
           targetIndex = 1;
         }
       } else if (translationX > threshold || velocityX > velocityThreshold) {
         // Swipe right
-        if (activeIndex > 0) {
+        if (activeIndexRef.current > 0) {
           targetIndex = 0;
         }
       }
 
       // Calculate optimal animation parameters based on velocity
       const targetPosition = -targetIndex * SCREEN_WIDTH;
-      const distance = Math.abs(targetPosition - lastPosition.current);
-      const absVelocity = Math.abs(velocityX);
+      const currentPosition = translateX._value;
+      const distance = Math.abs(targetPosition - currentPosition);
 
-      isAnimating.current = true;
+      // Update ref immediately for next gesture
+      activeIndexRef.current = targetIndex;
 
       if (targetIndex !== activeIndex) {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
       }
 
-      // Use velocity-aware spring for ultra-smooth completion
-      const springConfig = {
+      // Use timing animation for consistent, smooth behavior
+      const animation = Animated.timing(translateX, {
         toValue: targetPosition,
-        velocity: velocityX / 1000, // Normalize velocity
+        duration: Math.max(200, Math.min(300, distance * 0.8)), // Duration based on distance
+        easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
-        tension: 80, // Higher tension for snappier response
-        friction: 14, // Balanced friction for smooth deceleration
-      };
+      });
 
-      // For quick swipes or small distances, use timing for precision
-      if (isQuickSwipe || distance < SCREEN_WIDTH * 0.3) {
-        Animated.timing(translateX, {
-          toValue: targetPosition,
-          duration: 250,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }).start(() => {
-          isAnimating.current = false;
-          setActiveIndex(targetIndex);
-        });
-      } else {
-        // Use spring for natural feel on slower swipes
-        Animated.spring(translateX, springConfig).start(() => {
-          isAnimating.current = false;
-          setActiveIndex(targetIndex);
-        });
-      }
+      currentAnimation.current = animation;
+
+      animation.start(({ finished }) => {
+        if (finished) {
+          currentAnimation.current = null;
+          isGestureDriven.current = false;
+          setActiveIndex(targetIndex); // Update state after animation
+        }
+      });
     })
     .runOnJS(true);
 
-  // Navigate programmatically when tab is pressed
+  // Navigate programmatically when tab is pressed (not during gestures)
   useEffect(() => {
-    const targetPosition = -activeIndex * SCREEN_WIDTH;
-
-    if (!isAnimating.current) {
-      isAnimating.current = true;
-
-      Animated.spring(translateX, {
-        toValue: targetPosition,
-        velocity: 0,
-        useNativeDriver: true,
-        tension: 80,
-        friction: 14,
-      }).start(() => {
-        isAnimating.current = false;
-      });
+    // Skip if this state change was triggered by gesture
+    if (isGestureDriven.current) {
+      isGestureDriven.current = false;
+      return;
     }
+
+    const targetPosition = -activeIndex * SCREEN_WIDTH;
+    activeIndexRef.current = activeIndex;
+
+    // Cancel any ongoing animation
+    if (currentAnimation.current) {
+      currentAnimation.current.stop();
+    }
+
+    const animation = Animated.spring(translateX, {
+      toValue: targetPosition,
+      velocity: 0,
+      useNativeDriver: true,
+      tension: 80,
+      friction: 14,
+    });
+
+    currentAnimation.current = animation;
+    animation.start(() => {
+      currentAnimation.current = null;
+    });
   }, [activeIndex]);
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: colors.bgLight }}>
       <GestureDetector gesture={pan}>
         <Animated.View style={{
           flexDirection: 'row',
@@ -177,7 +185,7 @@ const CustomTabBar = memo(function CustomTabBar({ activeIndex, onTabPress }) {
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={[styles.tabBar, { paddingBottom: insets.bottom - 20 }]}>
+    <View style={[styles.tabBar, { paddingBottom: insets.bottom }]}>
       {TABS.map((tab, index) => {
         const isActive = activeIndex === index;
 
@@ -230,8 +238,12 @@ const styles = StyleSheet.create({
     gap: 80,
     backgroundColor: colors.tabBg,
     paddingTop: 10,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(139,92,246,0.2)',
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderColor: 'rgba(139,92,246,0.2)',
   },
   tabButton: {
     alignItems: 'center',

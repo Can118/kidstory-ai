@@ -153,7 +153,7 @@ export default function LibraryScreen({ navigation }) {
         numColumns={2}
         columnWrapperStyle={styles.row}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 36 }}
+        contentContainerStyle={{ paddingBottom: 100 }}
       />
     </LinearGradient>
   );
