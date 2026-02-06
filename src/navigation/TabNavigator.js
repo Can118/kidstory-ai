@@ -19,7 +19,7 @@ function CustomTabBar({ navigation, state }) {
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={[styles.tabBar, { paddingBottom: insets.bottom + 16 }]}>
+    <View style={[styles.tabBar, { paddingBottom: insets.bottom - 20 }]}>
       {state.routes.map((route, index) => {
         const isActive = state.index === index;
         const tab = TABS.find((t) => t.name === route.name);
@@ -74,9 +74,10 @@ export default function TabNavigator() {
 const styles = StyleSheet.create({
   tabBar: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'center',
+    gap: 80,
     backgroundColor: colors.tabBg,
-    paddingTop: 18,
+    paddingTop: 10,
     borderTopWidth: 1,
     borderTopColor: 'rgba(139,92,246,0.2)',
   },
@@ -84,8 +85,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
-    paddingHorizontal: 32,
-    paddingVertical: 4,
+    paddingHorizontal: 24,
+    paddingVertical: 2,
   },
   activePill: {
     position: 'absolute',
@@ -103,7 +104,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontFamily: 'SFPro-Heavy',
     color: colors.tabInactive,
-    marginTop: 6,
+    marginTop: 3,
     zIndex: 1,
   },
   tabLabelActive: {
