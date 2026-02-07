@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
   activePill: {
     position: 'absolute',
     width: 64,
-    height: 44,
+    height: 40,
     borderRadius: 22,
     backgroundColor: colors.tabActivePill,
     top: -2,
@@ -273,6 +273,7 @@ const styles = StyleSheet.create({
     color: colors.tabInactive,
     marginTop: 3,
     zIndex: 1,
+    letterSpacing: -0.3,
   },
   tabLabelActive: {
     color: colors.tabActive,

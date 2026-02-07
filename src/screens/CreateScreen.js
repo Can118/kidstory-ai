@@ -396,7 +396,7 @@ export default function CreateScreen({ navigation }) {
           delayPressIn={70}
         >
           <View style={styles.createBtnInner}>
-            <Text style={styles.createBtnText}>Create Story ✨</Text>
+            <Text style={styles.createBtnText}>Create Story</Text>
           </View>
         </TouchableOpacity>
       </View>
@@ -687,21 +687,21 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     shadowColor: '#8B5CF6',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.5,
-    shadowRadius: 20,
+    shadowOpacity: 0.1,
+    shadowRadius: 90,
     elevation: 10,
   },
   createBtnInner: {
-    paddingVertical: 20,
+    paddingVertical: 23,
     alignItems: 'center',
-    backgroundColor: '#8B5CF6',
-    borderRadius: 28,
+    backgroundColor: '#0004FF',
+    borderRadius: 68,
   },
   createBtnText: {
-    fontSize: 22,
+    fontSize: 20,
     fontFamily: 'SFPro-Heavy',
     color: '#FFFFFF',
-    letterSpacing: -0.5,
+    letterSpacing: -0.7,
   },
 
   // ── Prompt Modal ──────────────────────────────────
