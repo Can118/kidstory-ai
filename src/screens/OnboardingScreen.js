@@ -7,11 +7,9 @@ import {
   Animated,
   TouchableOpacity,
   TextInput,
-  ScrollView,
-  Platform,
-  Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 
 const { width, height } = Dimensions.get('window');
 const isSE = width === 375 && height === 667;
@@ -19,36 +17,26 @@ const isSE = width === 375 && height === 667;
 const STEPS = {
   START: 'start',
   APPEAR: 'appear',
-  DOWN: 'down',
-  TEXT: 'text',
-  CLOUD: 'cloud',
   NAME: 'name',
-  AGE: 'age',
-  FINISH: 'finish',
 };
 
 export default function OnboardingScreen({ onComplete }) {
   const [step, setStep] = useState(STEPS.START);
   const [userName, setUserName] = useState('');
-  const [userAge, setUserAge] = useState(4);
 
-  // Animation values
+  // Animation values - simplified based on reference
   const arrowOffset = useRef(new Animated.Value(-3)).current;
   const logoOpacity = useRef(new Animated.Value(0)).current;
   const buttonOpacity = useRef(new Animated.Value(0)).current;
   const cardsOpacity = useRef(new Animated.Value(0)).current;
-  const cardsDownOpacity = useRef(new Animated.Value(0)).current;
-  const cloudOpacity = useRef(new Animated.Value(0)).current;
+  const starTwinkle = useRef(new Animated.Value(0.6)).current;
 
-  // Position values
-  const cardsYOffset = useRef(new Animated.Value(100)).current;
-  const cardsXOffset = useRef(new Animated.Value(500)).current;
-  const cardsRotation = useRef(new Animated.Value(15)).current;
+  // Position values - following reference implementation
+  const cardsXOffset = useRef(new Animated.Value(500)).current; // Start: 500, Appear: 110
+  const cardsYOffset = useRef(new Animated.Value(100)).current; // Start: 100, Appear: 15
+  const cardsRotation = useRef(new Animated.Value(15)).current; // Start: 15, Appear: -15
   const cardsDownYOffset = useRef(new Animated.Value(0)).current;
-  const cardRotation = useRef(new Animated.Value(15)).current;
-  const cardsCloudOffset = useRef(new Animated.Value(0)).current;
   const cardsUserDataOffset = useRef(new Animated.Value(0)).current;
-  const finishRotation = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     // Initial logo fade in
@@ -58,21 +46,12 @@ export default function OnboardingScreen({ onComplete }) {
       useNativeDriver: true,
     }).start();
 
-    // Button fade in
+    // Auto advance to appear after logo appears
     setTimeout(() => {
-      Animated.timing(buttonOpacity, {
-        toValue: 1,
-        duration: 1000,
-        useNativeDriver: true,
-      }).start();
+      advanceStep();
+    }, 800);
 
-      // Auto advance to appear
-      setTimeout(() => {
-        advanceStep();
-      }, 500);
-    }, 500);
-
-    // Arrow animation
+    // Arrow animation loop
     Animated.loop(
       Animated.sequence([
         Animated.timing(arrowOffset, {
@@ -87,46 +66,38 @@ export default function OnboardingScreen({ onComplete }) {
         }),
       ])
     ).start();
+
+    // Star twinkling animation
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(starTwinkle, {
+          toValue: 0.9,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+        Animated.timing(starTwinkle, {
+          toValue: 0.3,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
   }, []);
 
   const advanceStep = () => {
-    let nextStep = step;
-
     switch (step) {
       case STEPS.START:
-        nextStep = STEPS.APPEAR;
+        setStep(STEPS.APPEAR);
         animateToAppear();
         break;
       case STEPS.APPEAR:
-        nextStep = STEPS.DOWN;
-        animateToDown();
-        break;
-      case STEPS.DOWN:
-        nextStep = STEPS.TEXT;
-        animateToText();
-        break;
-      case STEPS.TEXT:
-        nextStep = STEPS.CLOUD;
-        animateToCloud();
-        break;
-      case STEPS.CLOUD:
-        nextStep = STEPS.NAME;
+        setStep(STEPS.NAME);
         animateToName();
         break;
       case STEPS.NAME:
-        nextStep = STEPS.AGE;
-        animateToAge();
-        break;
-      case STEPS.AGE:
-        nextStep = STEPS.FINISH;
-        animateToFinish();
-        break;
-      case STEPS.FINISH:
-        onComplete?.({ name: userName, age: userAge });
+        onComplete?.({ name: userName });
         break;
     }
-
-    setStep(nextStep);
   };
 
   const animateToAppear = () => {
@@ -136,13 +107,13 @@ export default function OnboardingScreen({ onComplete }) {
         duration: 800,
         useNativeDriver: true,
       }),
-      Animated.timing(cardsYOffset, {
-        toValue: 15,
+      Animated.timing(cardsXOffset, {
+        toValue: 110,
         duration: 800,
         useNativeDriver: true,
       }),
-      Animated.timing(cardsXOffset, {
-        toValue: 110,
+      Animated.timing(cardsYOffset, {
+        toValue: 15,
         duration: 800,
         useNativeDriver: true,
       }),
@@ -151,10 +122,17 @@ export default function OnboardingScreen({ onComplete }) {
         duration: 800,
         useNativeDriver: true,
       }),
-    ]).start();
+    ]).start(() => {
+      // Fade in button after cards have appeared
+      Animated.timing(buttonOpacity, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }).start();
+    });
   };
 
-  const animateToDown = () => {
+  const animateToName = () => {
     Animated.parallel([
       Animated.timing(logoOpacity, {
         toValue: 0,
@@ -171,82 +149,6 @@ export default function OnboardingScreen({ onComplete }) {
         duration: 800,
         useNativeDriver: true,
       }),
-      Animated.timing(cardsRotation, {
-        toValue: 15,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-    ]).start();
-
-    setTimeout(() => {
-      Animated.timing(cardsDownOpacity, {
-        toValue: 1,
-        duration: 1500,
-        useNativeDriver: true,
-      }).start();
-    }, 700);
-  };
-
-  const animateToText = () => {
-    Animated.parallel([
-      Animated.timing(cardsYOffset, {
-        toValue: height / 1.5,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  };
-
-  const animateToCloud = () => {
-    Animated.parallel([
-      Animated.timing(cardsYOffset, {
-        toValue: 200,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.timing(cardsDownYOffset, {
-        toValue: 50,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.timing(cardsRotation, {
-        toValue: -15,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.timing(cardsCloudOffset, {
-        toValue: 150,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-    ]).start();
-
-    setTimeout(() => {
-      Animated.timing(cloudOpacity, {
-        toValue: 1,
-        duration: 1500,
-        useNativeDriver: true,
-      }).start();
-    }, 700);
-  };
-
-  const animateToName = () => {
-    Animated.parallel([
-      Animated.timing(cardsYOffset, {
-        toValue: 0,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.timing(cardsDownYOffset, {
-        toValue: 0,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.timing(cardsCloudOffset, {
-        toValue: 0,
-        duration: 800,
-        useNativeDriver: true,
-      }),
       Animated.timing(cardsUserDataOffset, {
         toValue: 150,
         duration: 800,
@@ -255,180 +157,182 @@ export default function OnboardingScreen({ onComplete }) {
     ]).start();
   };
 
-  const animateToAge = () => {
-    Animated.parallel([
-      Animated.timing(cardsRotation, {
-        toValue: 15,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  };
-
-  const animateToFinish = () => {
-    Animated.parallel([
-      Animated.timing(cardsRotation, {
-        toValue: 345,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.timing(finishRotation, {
-        toValue: 30,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  };
-
-  const renderCard = (imageName, title, rotation, offsetX, offsetY, additionalRotation = 0) => {
+  const renderCard = (emoji, title, style, cornerPosition) => {
     return (
-      <Animated.View
-        style={[
-          styles.cardContainer,
-          {
-            transform: [
-              { translateX: offsetX },
-              { translateY: offsetY },
-              { rotate: rotation.interpolate({
-                inputRange: [-360, 360],
-                outputRange: ['-360deg', '360deg'],
-              }) },
-              { rotate: `${additionalRotation}deg` },
-            ],
-            opacity: cardsOpacity,
-          },
-        ]}
-      >
+      <Animated.View style={[styles.cardContainer, cornerPosition, style]}>
         <View style={styles.card}>
           <Text style={styles.cardTitle}>{title}</Text>
           <View style={styles.cardImagePlaceholder}>
-            <Text style={styles.cardImageText}>{imageName}</Text>
+            <Text style={styles.cardImageText}>{emoji}</Text>
           </View>
         </View>
       </Animated.View>
     );
   };
 
+  // Calculate card positions based on current state
+  // Card 1: Top-left corner
+  const getCard1Transform = () => ({
+    opacity: cardsOpacity,
+    transform: [
+      {
+        translateX: cardsXOffset.interpolate({
+          inputRange: [110, 500],
+          outputRange: [0, -300], // Start off-screen left, end at corner
+        }),
+      },
+      {
+        translateY: cardsYOffset.interpolate({
+          inputRange: [15, 100, height / 1.5],
+          outputRange: [0, -50, -80], // Stay at top, move up slightly for name step
+        }),
+      },
+      {
+        rotate: cardsRotation.interpolate({
+          inputRange: [-15, 15],
+          outputRange: ['-15deg', '15deg'],
+        }),
+      },
+    ],
+  });
+
+  // Card 2: Top-right corner
+  const getCard2Transform = () => ({
+    opacity: cardsOpacity,
+    transform: [
+      {
+        translateX: cardsXOffset.interpolate({
+          inputRange: [110, 500],
+          outputRange: [0, 300], // Start off-screen right, end at corner
+        }),
+      },
+      {
+        translateY: cardsYOffset.interpolate({
+          inputRange: [15, 100, height / 1.5],
+          outputRange: [0, -50, -80], // Stay at top, move up slightly for name step
+        }),
+      },
+      {
+        rotate: cardsRotation.interpolate({
+          inputRange: [-15, 15],
+          outputRange: ['15deg', '-15deg'],
+        }),
+      },
+    ],
+  });
+
+  // Card 3: Bottom-left corner
+  const getCard3Transform = () => ({
+    opacity: cardsOpacity,
+    transform: [
+      {
+        translateX: cardsXOffset.interpolate({
+          inputRange: [110, 500],
+          outputRange: [0, -300], // Start off-screen left, end at corner
+        }),
+      },
+      {
+        translateY: cardsYOffset.interpolate({
+          inputRange: [15, 100, height / 1.5],
+          outputRange: [0, 50, 120], // Slight down movement, then move down more for name step to stay at bottom
+        }),
+      },
+      {
+        rotate: cardsRotation.interpolate({
+          inputRange: [-15, 15],
+          outputRange: ['15deg', '-15deg'],
+        }),
+      },
+    ],
+  });
+
+  // Card 4: Bottom-right corner
+  const getCard4Transform = () => ({
+    opacity: cardsOpacity,
+    transform: [
+      {
+        translateX: cardsXOffset.interpolate({
+          inputRange: [110, 500],
+          outputRange: [0, 300], // Start off-screen right, end at corner
+        }),
+      },
+      {
+        translateY: cardsYOffset.interpolate({
+          inputRange: [15, 100, height / 1.5],
+          outputRange: [0, 50, 120], // Slight down movement, then move down more for name step to stay at bottom
+        }),
+      },
+      {
+        rotate: cardsRotation.interpolate({
+          inputRange: [-15, 15],
+          outputRange: ['-15deg', '15deg'],
+        }),
+      },
+    ],
+  });
+
   return (
-    <View style={styles.container}>
-      {/* Finish Screen */}
-      {step === STEPS.FINISH && (
-        <View style={styles.finishContainer}>
-          <Text style={styles.finishWelcome}>Welcome to</Text>
-          <Text style={styles.finishAppName}>kidstory</Text>
-          <Text style={styles.finishMessage}>{userName}'s magical journey begins!</Text>
-        </View>
-      )}
+    <LinearGradient colors={['#0F0621', '#1A0F3D', '#2D1B69', '#1E1145']} style={styles.container} locations={[0, 0.3, 0.7, 1]}>
+      {/* Decorative Background Elements */}
+      <View style={styles.backgroundDecorations}>
+        <Animated.View style={[styles.star, { top: '15%', left: '10%', opacity: starTwinkle }]} />
+        <Animated.View style={[styles.star, { top: '25%', right: '15%', opacity: starTwinkle }]} />
+        <Animated.View style={[styles.star, { top: '60%', left: '20%', opacity: starTwinkle }]} />
+        <Animated.View style={[styles.star, { bottom: '20%', right: '25%', opacity: starTwinkle }]} />
+        <Animated.View style={[styles.starSmall, { top: '35%', left: '80%', opacity: starTwinkle }]} />
+        <Animated.View style={[styles.starSmall, { top: '70%', right: '10%', opacity: starTwinkle }]} />
+        <Animated.View style={[styles.starSmall, { bottom: '35%', left: '15%', opacity: starTwinkle }]} />
+      </View>
 
-      {/* Text Step */}
-      {step === STEPS.TEXT && (
-        <View style={styles.textStepContainer}>
-          <View style={styles.textHeader}>
-            <Text style={styles.stepTitle}>Create magical stories</Text>
-            <Text style={styles.stepSubtitle}>Powered by AI imagination</Text>
-          </View>
-          <ScrollView style={styles.textScroll} contentContainerStyle={styles.textScrollContent}>
-            <Text style={styles.exampleText}>
-              Upload your child's photo, describe what kind of story you want, and watch as AI creates
-              a personalized magical tale just for them. Each story is unique, engaging, and perfect
-              for bedtime reading.
-            </Text>
-          </ScrollView>
-        </View>
-      )}
-
-      {/* Down Step */}
-      {step === STEPS.DOWN && (
-        <Animated.View style={[styles.downStepContainer, { opacity: cardsDownOpacity }]}>
-          <Text style={styles.stepTitle}>AI-Powered Stories</Text>
-          <Animated.View style={{ opacity: cardsDownOpacity }}>
-            <Text style={styles.stepSubtitle}>Create unique tales for your child</Text>
-            <Text style={styles.poweredBy}>Powered by AI</Text>
-          </Animated.View>
-        </Animated.View>
-      )}
-
-      {/* Cloud Step */}
-      {step === STEPS.CLOUD && (
-        <View style={styles.cloudStepContainer}>
-          <Text style={[styles.cloudIcon, { fontSize: 50 }]}>☁️</Text>
-          <Text style={styles.stepTitle}>Save to Cloud</Text>
-          <Animated.View style={{ opacity: cloudOpacity }}>
-            <Text style={styles.stepSubtitle}>Access your stories anywhere, anytime</Text>
-          </Animated.View>
-        </View>
-      )}
+      {/* Radial glow overlay for depth */}
+      <View style={styles.radialGlow} />
 
       {/* Name Step */}
       {step === STEPS.NAME && (
         <View style={styles.nameStepContainer}>
-          <Text style={styles.stepTitle}>What's your child's name?</Text>
+          <Text style={styles.stepTitle}>Who is the Hero of Stories</Text>
           <TextInput
             style={styles.nameInput}
             value={userName}
             onChangeText={setUserName}
-            placeholder="Enter name"
-            placeholderTextColor="rgba(255,255,255,0.4)"
+            placeholder="Kid's name"
+            placeholderTextColor="rgba(255,255,255,0.3)"
             autoFocus
           />
-          <View style={styles.inputUnderline} />
+          <LinearGradient
+            colors={['#8B5CF6', '#A78BFA', '#C4B5FD']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.inputUnderline}
+          />
         </View>
       )}
 
-      {/* Age Step */}
-      {step === STEPS.AGE && (
-        <View style={styles.ageStepContainer}>
-          <Text style={styles.stepTitle}>{userName}'s age?</Text>
-          <Text style={styles.ageDisplay}>{userAge} years old</Text>
-          <View style={styles.ageButtons}>
-            <TouchableOpacity
-              style={styles.ageButton}
-              onPress={() => setUserAge(Math.max(1, userAge - 1))}
-            >
-              <Text style={styles.ageButtonText}>-</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.ageButton}
-              onPress={() => setUserAge(Math.min(12, userAge + 1))}
-            >
-              <Text style={styles.ageButtonText}>+</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
-
-      {/* Cards */}
-      <View style={styles.cardsContainer}>
-        <Animated.View
-          style={{
-            transform: [{ translateY: Animated.multiply(cardsUserDataOffset, -1) }],
-          }}
-        >
-          {renderCard(
-            '🎨',
-            'Create',
-            Animated.add(Animated.multiply(cardsRotation, -1), cardRotation),
-            Animated.subtract(cardsXOffset, 0),
-            Animated.subtract(Animated.subtract(cardsYOffset, 0), cardsCloudOffset)
-          )}
-
-          {renderCard(
-            '✨',
-            'Imagine',
-            cardsRotation,
-            Animated.multiply(cardsXOffset, -1),
-            Animated.add(Animated.multiply(cardsYOffset, -1), Animated.multiply(cardsDownYOffset, 4))
-          )}
-        </Animated.View>
-      </View>
+      {/* Cards Group 1 */}
+      <Animated.View
+        style={[
+          styles.cardsContainer,
+          {
+            transform: [
+              {
+                translateY: Animated.multiply(cardsUserDataOffset, -1),
+              },
+            ],
+          },
+        ]}
+      >
+        {renderCard('✏️', 'Create', getCard1Transform(), styles.topLeftCorner)}
+        {renderCard('💭', 'Imagine', getCard2Transform(), styles.topRightCorner)}
+      </Animated.View>
 
       {/* Logo */}
       <Animated.View style={[styles.logoContainer, { opacity: logoOpacity }]}>
         <Text style={styles.logoWelcome}>Welcome to</Text>
         <Text style={styles.logoName}>kidstory</Text>
+        <Text style={styles.logoTagline}>Your Kid. The Hero of the Story.</Text>
       </Animated.View>
 
-      {/* Bottom Cards */}
+      {/* Cards Group 2 */}
       <Animated.View
         style={[
           styles.bottomCardsContainer,
@@ -437,112 +341,151 @@ export default function OnboardingScreen({ onComplete }) {
           },
         ]}
       >
-        {renderCard(
-          '📚',
-          'Library',
-          Animated.subtract(Animated.multiply(cardsRotation, -1), finishRotation),
-          cardsXOffset,
-          Animated.subtract(
-            Animated.subtract(cardsYOffset, cardsDownYOffset),
-            Animated.multiply(cardsCloudOffset, 0.9)
-          )
-        )}
-
-        {renderCard(
-          '🌟',
-          'Discover',
-          Animated.add(cardsRotation, finishRotation),
-          Animated.multiply(cardsXOffset, -1),
-          Animated.add(
-            Animated.add(Animated.multiply(cardsYOffset, -1), Animated.multiply(cardsDownYOffset, 3)),
-            cardsCloudOffset
-          )
-        )}
+        {renderCard('📖', 'Library', getCard3Transform(), styles.bottomLeftCorner)}
+        {renderCard('🚀', 'Discover', getCard4Transform(), styles.bottomRightCorner)}
       </Animated.View>
 
       {/* Next Button */}
       {step !== STEPS.NAME || userName !== '' ? (
-        <Animated.View style={[styles.buttonContainer, { opacity: buttonOpacity }]}>
+        <Animated.View
+          style={[
+            step === STEPS.NAME && userName !== ''
+              ? styles.buttonContainerNameStep
+              : styles.buttonContainer,
+            { opacity: buttonOpacity }
+          ]}
+        >
           <TouchableOpacity style={styles.button} onPress={advanceStep} activeOpacity={0.8}>
             <LinearGradient
-              colors={['#8B5CF6', '#A78BFA']}
+              colors={['#7C3AED', '#8B5CF6', '#A78BFA']}
               style={styles.buttonGradient}
               start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              locations={[0, 0.5, 1]}
             >
-              {step === STEPS.FINISH ? (
+              {step === STEPS.NAME && userName !== '' ? (
                 <Text style={styles.buttonTextFinish}>Let's Start!</Text>
               ) : (
-                <Animated.Text
-                  style={[
-                    styles.buttonText,
-                    {
-                      transform: [{ translateX: arrowOffset }],
-                    },
-                  ]}
+                <Animated.View
+                  style={{
+                    transform: [{ translateX: arrowOffset }],
+                  }}
                 >
-                  →
-                </Animated.Text>
+                  <Ionicons name="arrow-forward" size={28} color="#FFFFFF" />
+                </Animated.View>
               )}
             </LinearGradient>
           </TouchableOpacity>
         </Animated.View>
       ) : null}
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+  },
+
+  // Background decorations
+  backgroundDecorations: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 0,
+  },
+  star: {
+    position: 'absolute',
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#A78BFA',
+    shadowColor: '#A78BFA',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 8,
+  },
+  starSmall: {
+    position: 'absolute',
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
+    backgroundColor: '#C4B5FD',
+  },
+  radialGlow: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'transparent',
+    zIndex: 0,
+    opacity: 0.3,
   },
 
   // Cards
   cardsContainer: {
     ...StyleSheet.absoluteFillObject,
-    alignItems: 'center',
-    justifyContent: 'center',
+    zIndex: 1,
   },
   bottomCardsContainer: {
     ...StyleSheet.absoluteFillObject,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 40,
+    zIndex: 2,
   },
   cardContainer: {
     position: 'absolute',
+  },
+  // Corner positions for cards
+  topLeftCorner: {
+    top: 110,
+    left: -30,
+  },
+  topRightCorner: {
+    top: 110,
+    right: -30,
+  },
+  bottomLeftCorner: {
+    bottom: 160,
+    left: -30,
+  },
+  bottomRightCorner: {
+    bottom: 160,
+    right: -30,
   },
   card: {
     width: 220,
     height: 200,
     backgroundColor: '#FFFFFF',
-    borderRadius: 25,
+    borderRadius: 28,
     padding: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 5,
-    elevation: 5,
+    borderWidth: 2,
+    borderColor: 'rgba(167, 139, 250, 0.15)',
+    shadowColor: '#8B5CF6',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
   cardTitle: {
     fontSize: 20,
     fontFamily: 'Rounded-Bold',
-    color: '#1E1145',
+    color: '#2D1B69',
     marginBottom: 8,
+    textShadowColor: 'rgba(139, 92, 246, 0.1)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   cardImagePlaceholder: {
     flex: 1,
-    backgroundColor: '#F3F4F6',
-    borderRadius: 8,
+    backgroundColor: '#F8F4FF',
+    borderRadius: 12,
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(167, 139, 250, 0.1)',
   },
   cardImageText: {
     fontSize: 60,
+    textShadowColor: 'rgba(0, 0, 0, 0.05)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
 
   // Logo
@@ -552,172 +495,75 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     alignItems: 'center',
+    zIndex: 100,
   },
   logoWelcome: {
     fontSize: 24,
     fontFamily: 'Rounded-Semibold',
-    color: '#1E1145',
+    color: '#FFFFFF',
+    textShadowColor: 'rgba(255, 255, 255, 0.3)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
   },
   logoName: {
     fontSize: 48,
     fontFamily: 'Rounded-Black',
-    color: '#8B5CF6',
+    color: '#A78BFA',
     marginTop: 4,
+    textShadowColor: '#8B5CF6',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 20,
   },
-
-  // Text Step
-  textStepContainer: {
-    ...StyleSheet.absoluteFillObject,
-    paddingTop: height / 8,
-    paddingHorizontal: 24,
-  },
-  textHeader: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  textScroll: {
-    flex: 1,
-    backgroundColor: 'rgba(255,255,255,0.5)',
-    borderRadius: 16,
-    padding: 16,
-    maxHeight: height / 5,
-  },
-  textScrollContent: {
-    paddingVertical: 8,
-  },
-  exampleText: {
+  logoTagline: {
     fontSize: 16,
     fontFamily: 'Rounded-Medium',
-    color: '#1E1145',
-    lineHeight: 24,
-  },
-
-  // Down Step
-  downStepContainer: {
-    position: 'absolute',
-    top: height / 5,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    paddingHorizontal: 24,
-  },
-  stepTitle: {
-    fontSize: 28,
-    fontFamily: 'Rounded-Black',
-    color: '#1E1145',
+    color: '#E9D5FF',
+    marginTop: 12,
     textAlign: 'center',
-    marginBottom: 16,
-  },
-  stepSubtitle: {
-    fontSize: 18,
-    fontFamily: 'Rounded-Medium',
-    color: '#6B7280',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  poweredBy: {
-    fontSize: 14,
-    fontFamily: 'Rounded-Semibold',
-    color: '#8B5CF6',
-    marginTop: 32,
-    textAlign: 'center',
-  },
-
-  // Cloud Step
-  cloudStepContainer: {
-    position: 'absolute',
-    top: height / 3,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    paddingHorizontal: 24,
-  },
-  cloudIcon: {
-    marginBottom: 16,
+    opacity: 0.9,
   },
 
   // Name Step
   nameStepContainer: {
     position: 'absolute',
-    top: height / 3,
+    top: height / 4,
     left: 0,
     right: 0,
     alignItems: 'center',
     paddingHorizontal: 24,
+    zIndex: 50,
+  },
+  stepTitle: {
+    fontSize: 28,
+    fontFamily: 'Rounded-Semibold',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: 24,
+    textShadowColor: 'rgba(255, 255, 255, 0.3)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 12,
+    letterSpacing: 0.3,
   },
   nameInput: {
-    fontSize: 40,
+    fontSize: 38,
     fontFamily: 'Rounded-Black',
-    color: '#1E1145',
+    color: '#E9D5FF',
     textAlign: 'center',
-    marginTop: 16,
+    marginTop: 20,
     minWidth: 200,
+    textShadowColor: 'rgba(167, 139, 250, 0.4)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
   },
   inputUnderline: {
-    height: 1,
-    backgroundColor: 'rgba(30,17,69,0.5)',
+    height: 3,
     marginHorizontal: 64,
-    marginTop: 8,
-  },
-
-  // Age Step
-  ageStepContainer: {
-    position: 'absolute',
-    top: height / 3,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    paddingHorizontal: 24,
-  },
-  ageDisplay: {
-    fontSize: 40,
-    fontFamily: 'Rounded-Black',
-    color: '#1E1145',
-    marginTop: 16,
-    marginBottom: 32,
-  },
-  ageButtons: {
-    flexDirection: 'row',
-    gap: 24,
-  },
-  ageButton: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#8B5CF6',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  ageButtonText: {
-    fontSize: 32,
-    fontFamily: 'Rounded-Bold',
-    color: '#FFFFFF',
-  },
-
-  // Finish Step
-  finishContainer: {
-    ...StyleSheet.absoluteFillObject,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-  },
-  finishWelcome: {
-    fontSize: 24,
-    fontFamily: 'Rounded-Semibold',
-    color: '#1E1145',
-  },
-  finishAppName: {
-    fontSize: 52,
-    fontFamily: 'Rounded-Black',
-    color: '#8B5CF6',
-    marginVertical: 8,
-  },
-  finishMessage: {
-    fontSize: 20,
-    fontFamily: 'Rounded-Medium',
-    color: '#6B7280',
-    textAlign: 'center',
-    marginTop: 16,
+    marginTop: 12,
+    borderRadius: 2,
+    shadowColor: '#8B5CF6',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 8,
   },
 
   // Button
@@ -727,31 +573,40 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     alignItems: 'center',
+    zIndex: 200,
+  },
+  buttonContainerNameStep: {
+    position: 'absolute',
+    top: height / 4 + 170,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 200,
   },
   button: {
-    borderRadius: 16,
+    borderRadius: 20,
     overflow: 'hidden',
-    shadowColor: '#8B5CF6',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowColor: '#A78BFA',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.6,
+    shadowRadius: 20,
+    elevation: 10,
   },
   buttonGradient: {
     paddingVertical: 14,
-    paddingHorizontal: 48,
+    paddingHorizontal: 140,
     alignItems: 'center',
     justifyContent: 'center',
-    minWidth: 140,
-  },
-  buttonText: {
-    fontSize: 32,
-    fontFamily: 'Rounded-Bold',
-    color: '#FFFFFF',
+    minWidth: 260,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   buttonTextFinish: {
     fontSize: 18,
     fontFamily: 'Rounded-Black',
     color: '#FFFFFF',
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
 });

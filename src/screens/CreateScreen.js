@@ -320,7 +320,7 @@ export default function CreateScreen({ navigation }) {
                 style={styles.uploadIcon}
               />
 
-              <Text style={styles.uploadTitle}>Add your child's photo</Text>
+              <Text style={styles.uploadTitle}>Add your kid's photo</Text>
               <Text style={styles.uploadSubtext}>Photos deleted after use.</Text>
             </LinearGradient>
           </GHTouchableOpacity>
@@ -389,16 +389,31 @@ export default function CreateScreen({ navigation }) {
 
       {/* Create button - always visible at bottom */}
       <View style={styles.bottomBar}>
-        <TouchableOpacity
-          style={styles.createBtn}
-          onPress={handleCreate}
-          activeOpacity={0.82}
-          delayPressIn={70}
-        >
-          <View style={styles.createBtnInner}>
-            <Text style={styles.createBtnText}>Create Story</Text>
-          </View>
-        </TouchableOpacity>
+        <View style={styles.createBtnShadowWrapper}>
+          <TouchableOpacity
+            style={styles.createBtn}
+            onPress={handleCreate}
+            activeOpacity={0.88}
+            delayPressIn={70}
+          >
+            <LinearGradient
+              colors={['#0050FF', '#0038DD']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 0, y: 1 }}
+              style={styles.createBtnGradient}
+            >
+              {/* Subtle top shine - starts lower with softer opacity */}
+              <LinearGradient
+                colors={['rgba(255, 255, 255, 0.35)', 'rgba(255, 255, 255, 0)']}
+                style={styles.createBtnTopShine}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 0, y: 1 }}
+              />
+
+              <Text style={styles.createBtnText}>Create Story</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* ── Prompt Modal ── */}
@@ -682,26 +697,45 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
     paddingTop: 16,
   },
-  createBtn: {
-    borderRadius: 28,
-    overflow: 'hidden',
-    shadowColor: '#8B5CF6',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.1,
-    shadowRadius: 90,
-    elevation: 10,
+  createBtnShadowWrapper: {
+    borderRadius: 100,
+    shadowColor: '#0044FF',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.55,
+    shadowRadius: 28,
+    elevation: 12,
+    padding: 3,
   },
-  createBtnInner: {
-    paddingVertical: 23,
+  createBtn: {
+    borderRadius: 97,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: 'rgba(120, 160, 255, 0.5)',
+  },
+  createBtnGradient: {
+    paddingVertical: 22,
     alignItems: 'center',
-    backgroundColor: '#0004FF',
-    borderRadius: 68,
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  createBtnTopShine: {
+    position: 'absolute',
+    top: -3,
+    left: -3,
+    right: -3,
+    height: '35%',
+    borderTopLeftRadius: 97,
+    borderTopRightRadius: 97,
   },
   createBtnText: {
     fontSize: 20,
-    fontFamily: 'SFPro-Heavy',
+    fontFamily: 'SFPro-Black',
     color: '#FFFFFF',
-    letterSpacing: -0.7,
+    letterSpacing: 0,
+    textShadowColor: 'rgba(0, 20, 80, 0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+    zIndex: 1,
   },
 
   // ── Prompt Modal ──────────────────────────────────

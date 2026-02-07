@@ -85,31 +85,21 @@ export default function LibraryScreen({ navigation, onNavigateToCreate }) {
     );
   };
 
-  const handleDeleteAccount = () => {
-    closeSettings();
-    Alert.alert(
-      'Delete Account',
-      'Are you sure you want to delete your account? This action cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete Account',
-          style: 'destructive',
-          onPress: () => {
-            Alert.alert('Account Deleted', 'Your account has been deleted.');
-          },
-        },
-      ]
-    );
-  };
-
   const settingsOptions = [
     {
-      icon: 'notifications-outline',
-      title: 'Turn on notifications',
+      icon: 'star-outline',
+      title: 'Leave a review',
       onPress: () => {
         closeSettings();
-        Alert.alert('Notifications', 'This feature will be available soon!');
+        Alert.alert('Leave a Review', 'Thank you for your support!');
+      },
+    },
+    {
+      icon: 'share-social-outline',
+      title: 'Share with friends',
+      onPress: () => {
+        closeSettings();
+        Alert.alert('Share', 'Share this app with your friends!');
       },
     },
     {
@@ -118,22 +108,6 @@ export default function LibraryScreen({ navigation, onNavigateToCreate }) {
       onPress: () => {
         closeSettings();
         Alert.alert('Help', 'Contact us at support@kidstory.ai');
-      },
-    },
-    {
-      icon: 'document-text-outline',
-      title: 'Terms of use',
-      onPress: () => {
-        closeSettings();
-        Alert.alert('Terms of Use', 'Terms of use content will be displayed here.');
-      },
-    },
-    {
-      icon: 'shield-checkmark-outline',
-      title: 'Privacy policy',
-      onPress: () => {
-        closeSettings();
-        Alert.alert('Privacy Policy', 'Privacy policy content will be displayed here.');
       },
     },
     {
@@ -153,7 +127,24 @@ export default function LibraryScreen({ navigation, onNavigateToCreate }) {
     {
       icon: 'close-circle-outline',
       title: 'Delete account',
-      onPress: handleDeleteAccount,
+      onPress: async () => {
+        closeSettings();
+        Alert.alert(
+          'Delete Account',
+          'This will reset everything and show onboarding again.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Delete',
+              style: 'destructive',
+              onPress: async () => {
+                await AsyncStorage.clear();
+                Alert.alert('Done', 'Please close and reopen the app.');
+              },
+            },
+          ]
+        );
+      },
       destructive: true,
     },
   ];
@@ -402,7 +393,7 @@ const styles = StyleSheet.create({
 
   // ── Title ─────────────────────────────────────────
   pageTitle: {
-    fontSize: 32,
+    fontSize: 36,
     fontFamily: 'Rounded-Black',
     color: '#FFFFFF',
     paddingHorizontal: 24,

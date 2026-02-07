@@ -27,6 +27,7 @@ export default function App() {
     'Rounded-Heavy': require('./assets/fonts/SF-Pro-Rounded-Heavy.otf'),
     'Rounded-Black': require('./assets/fonts/SF-Pro-Rounded-Black.otf'),
     'SFPro-Heavy': require('./assets/fonts/SF-Pro-Heavy.otf'),
+    'SFPro-Black': require('./assets/fonts/SF-Pro-Black.otf'),
   });
 
   useEffect(() => {
