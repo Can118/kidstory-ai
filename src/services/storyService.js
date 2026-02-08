@@ -444,11 +444,11 @@ export async function createStory(childPhotoUri, userPrompt, childName = '', chi
   }
 
   // --- MOCK (no API key or API failed) ---
-  const { title, body } = await mockGenerateStory(childName);
+  const { title, pages } = await mockGenerateStory(childName);
   return {
     id,
     title,
-    pages: [body], // Convert mock body to single-page array for consistency
+    pages, // Mock now returns properly formatted pages array
     childPhotoUri,
     illustrationUrl: null,
     prompt: enhancedPrompt,
@@ -468,29 +468,36 @@ function parseStoryText(raw) {
 
 // Parse 6-page story format from Grok
 function parseStoryPages(raw) {
-  const lines = raw.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+  // Extract title
+  const titleMatch = raw.match(/TITLE:\s*(.+?)(?:\n|PAGE)/i);
+  const title = titleMatch ? titleMatch[1].trim() : '';
 
-  let title = '';
+  // Split by PAGE markers and extract page content
+  const pageRegex = /PAGE\s+(\d+):\s*([\s\S]*?)(?=PAGE\s+\d+:|$)/gi;
   const pages = [];
+  let match;
 
-  for (const line of lines) {
-    if (line.startsWith('TITLE:')) {
-      title = line.replace('TITLE:', '').trim();
-    } else if (line.match(/^PAGE \d+:/)) {
-      const pageText = line.replace(/^PAGE \d+:/, '').trim();
-      pages.push(pageText);
+  while ((match = pageRegex.exec(raw)) !== null) {
+    const pageNumber = parseInt(match[1], 10);
+    const pageContent = match[2].trim();
+
+    if (pageContent) {
+      pages.push(pageContent);
     }
   }
 
   // Fallback: if parsing failed, return mock structure
   if (!title || pages.length === 0) {
-    console.warn('Failed to parse 6-page format, using fallback parser');
+    console.warn('⚠️ Failed to parse 6-page format, using fallback parser');
+    console.warn('Raw text preview:', raw.slice(0, 200));
     const fallback = parseStoryText(raw);
     return {
       title: fallback.title,
       pages: [fallback.body] // Put entire body as single page
     };
   }
+
+  console.log(`✅ Successfully parsed story: "${title}" with ${pages.length} pages`);
 
   return { title, pages };
 }
@@ -501,13 +508,14 @@ async function mockGenerateStory(childName = 'Alex') {
   const name = childName || 'Alex'; // Use provided name or default
   return {
     title: `${name} and the Magic Garden`,
-    body:
-      `PAGE 1: ${name} saw a little gate behind some flowers. ${name} opened the gate. "Wow!" said ${name}. Inside was a pretty garden!\n\n` +
-      `PAGE 2: The flowers were so bright! They looked like stars. A blue bird said, "Hi ${name}! We waited for you!" ${name} smiled big.\n\n` +
-      `PAGE 3: ${name} walked in the garden. The roses giggled. The butterflies danced. But oh no! The rainbow was not there.\n\n` +
-      `PAGE 4: "The rainbow needs help," said the bird. ${name} gave water to the flowers. ${name} helped a little vine. "I can help!" said ${name}.\n\n` +
-      `PAGE 5: The rainbow came back! It was so pretty! Red, blue, yellow, and more! "You did it!" said all the friends. ${name} was so happy!\n\n` +
-      `PAGE 6: ${name} goes to the garden every day now. ${name} knows that being kind makes magic happen. The End.`,
+    pages: [
+      `${name} saw a little gate behind some flowers. ${name} opened the gate. "Wow!" said ${name}. Inside was a pretty garden!`,
+      `The flowers were so bright! They looked like stars. A blue bird said, "Hi ${name}! We waited for you!" ${name} smiled big.`,
+      `${name} walked in the garden. The roses giggled. The butterflies danced. But oh no! The rainbow was not there.`,
+      `"The rainbow needs help," said the bird. ${name} gave water to the flowers. ${name} helped a little vine. "I can help!" said ${name}.`,
+      `The rainbow came back! It was so pretty! Red, blue, yellow, and more! "You did it!" said all the friends. ${name} was so happy!`,
+      `${name} goes to the garden every day now. ${name} knows that being kind makes magic happen. The End.`,
+    ],
   };
 }
 
