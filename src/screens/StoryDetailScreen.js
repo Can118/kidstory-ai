@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity, Share, SafeAreaView, ScrollView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import colors from '../theme/colors';
@@ -9,6 +9,7 @@ export default function StoryDetailScreen({ route, navigation }) {
   const { storyId } = route.params;
   const { stories } = useStoryContext();
   const story = stories.find((s) => s.id === storyId);
+  const [currentPage, setCurrentPage] = useState(0);
 
   if (!story) {
     return (
@@ -21,182 +22,284 @@ export default function StoryDetailScreen({ route, navigation }) {
     );
   }
 
+  // Support both old stories (with body) and new stories (with pages array)
+  const pages = story.pages || [story.body];
+  const totalPages = pages.length;
+  const currentPageText = pages[currentPage] || '';
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages - 1) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 0) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleShare = async () => {
+    try {
+      const shareMessage = `Check out "${story.title}" - my personalized story where I'm the hero! ✨\n\nhttps://apps.apple.com/app/kidstory-ai/id123456789`;
+
+      await Share.share({
+        message: shareMessage,
+        title: story.title,
+      });
+    } catch (error) {
+      console.error('Error sharing:', error);
+    }
+  };
+
   return (
-    <View style={styles.container}>
-      {/* Floating back button — dark circle, works over any illustration */}
+    <SafeAreaView style={styles.container}>
+      {/* Floating back button */}
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
         <View style={styles.backButtonInner}>
           <Ionicons name="chevron-back" size={24} color="#FFFFFF" />
         </View>
       </TouchableOpacity>
 
-      <ScrollView style={styles.scroll} showsVerticalScrollIndicator={false}>
-        {/* ── Illustration + gradient fade ── */}
-        <View style={styles.illustrationWrapper}>
-          {story.illustrationUrl ? (
-            <>
-              <Image source={{ uri: story.illustrationUrl }} style={styles.illustration} />
-              <LinearGradient
-                colors={['transparent', colors.pageBg]}
-                style={styles.fadeOverlay}
-              />
-            </>
-          ) : (
-            <LinearGradient
-              colors={['#1E1145', '#6D28D9', colors.pageBg]}
-              style={styles.illustration}
-            >
-              <View style={styles.placeholderCenter}>
-                <Text style={styles.placeholderIcon}>🌟</Text>
-              </View>
-            </LinearGradient>
-          )}
+      {/* Floating share button */}
+      <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
+        <View style={styles.shareButtonInner}>
+          <Ionicons name="share-outline" size={24} color="#FFFFFF" />
         </View>
+      </TouchableOpacity>
 
-        {/* ── Story "page" — warm cream book-page feel ── */}
-        <View style={styles.storyPage}>
+      {/* Image Section - takes up ~50% of screen */}
+      <View style={styles.imageSection}>
+        {story.illustrationUrl ? (
+          <Image source={{ uri: story.illustrationUrl }} style={styles.illustration} />
+        ) : (
+          <LinearGradient
+            colors={['#1E1145', '#6D28D9', '#8B5CF6']}
+            style={styles.illustration}
+          >
+            <View style={styles.placeholderCenter}>
+              <Text style={styles.placeholderIcon}>🌟</Text>
+            </View>
+          </LinearGradient>
+        )}
+      </View>
+
+      {/* Progress Indicator - minimalist page dots */}
+      <View style={styles.progressContainer}>
+        {Array.from({ length: totalPages }).map((_, index) => (
+          <View
+            key={index}
+            style={[
+              styles.progressDot,
+              index === currentPage && styles.progressDotActive,
+            ]}
+          />
+        ))}
+      </View>
+
+      {/* Story Content Section - scrollable */}
+      <ScrollView
+        style={styles.storyScrollView}
+        contentContainerStyle={styles.storyContentContainer}
+        showsVerticalScrollIndicator={false}
+        bounces={true}
+        scrollEventThrottle={16}
+        decelerationRate="normal"
+      >
+        {/* Title shown only on first page */}
+        {currentPage === 0 && (
           <Text style={styles.storyTitle}>{story.title}</Text>
+        )}
 
-          <View style={styles.divider}>
-            <View style={styles.dividerLine} />
-            <View style={styles.dividerDot} />
-            <View style={styles.dividerLine} />
-          </View>
-
-          <Text style={styles.storyBody}>{story.body}</Text>
-
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>
-              {new Date(story.createdAt).toLocaleDateString('en-US', {
-                month: 'long',
-                day: 'numeric',
-                year: 'numeric',
-              })}
-            </Text>
-          </View>
-        </View>
+        {/* Story text - larger font size */}
+        <Text style={styles.storyBody}>{currentPageText}</Text>
       </ScrollView>
-    </View>
+
+      {/* Sleek navigation buttons at bottom */}
+      <View style={styles.navigationControls} pointerEvents="box-none">
+        <TouchableOpacity
+          style={[styles.navButtonWrapper, currentPage === 0 && styles.navButtonDisabled]}
+          onPress={handlePrevPage}
+          disabled={currentPage === 0}
+          activeOpacity={0.7}
+        >
+          <View style={[styles.navButton, currentPage === 0 && styles.navButtonInactive]}>
+            <Ionicons
+              name="chevron-back"
+              size={28}
+              color={currentPage === 0 ? 'rgba(255,255,255,0.4)' : '#FFFFFF'}
+            />
+          </View>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.navButtonWrapper, currentPage === totalPages - 1 && styles.navButtonDisabled]}
+          onPress={handleNextPage}
+          disabled={currentPage === totalPages - 1}
+          activeOpacity={0.7}
+        >
+          <View style={[styles.navButton, currentPage === totalPages - 1 && styles.navButtonInactive]}>
+            <Ionicons
+              name="chevron-forward"
+              size={28}
+              color={currentPage === totalPages - 1 ? 'rgba(255,255,255,0.4)' : '#FFFFFF'}
+            />
+          </View>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.pageBg,
+    backgroundColor: '#1a0f3d', // Deep purple background
   },
 
-  // ── Back button ─────────────────────────────────────
+  // ── Floating buttons (over image) ─────────────────────
   backButton: {
     position: 'absolute',
-    top: 56,
-    left: 20,
+    top: 60,
+    left: 24,
     zIndex: 10,
   },
   backButtonInner: {
-    backgroundColor: 'rgba(18,8,41,0.58)',
-    borderRadius: 22,
-    width: 44,
-    height: 44,
+    backgroundColor: 'rgba(26,15,61,0.75)',
+    borderRadius: 28,
+    width: 56,
+    height: 56,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.18)',
+    borderColor: 'rgba(255,255,255,0.12)',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
     shadowRadius: 8,
-    elevation: 5,
+    elevation: 6,
   },
 
-  // ── Scroll ──────────────────────────────────────────
-  scroll: { flex: 1 },
+  shareButton: {
+    position: 'absolute',
+    top: 60,
+    right: 24,
+    zIndex: 10,
+  },
+  shareButtonInner: {
+    backgroundColor: 'rgba(26,15,61,0.75)',
+    borderRadius: 28,
+    width: 56,
+    height: 56,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255,255,255,0.12)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
 
-  // ── Illustration ────────────────────────────────────
-  illustrationWrapper: {
-    position: 'relative',
+  // ── Image Section (top ~45% for balanced layout) ──────
+  imageSection: {
+    height: '45%',
     width: '100%',
   },
   illustration: {
     width: '100%',
-    height: 340,
-  },
-  fadeOverlay: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 140,
+    height: '100%',
   },
   placeholderCenter: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  placeholderIcon: { fontSize: 80 },
-
-  // ── Story page (book-page feel) ─────────────────────
-  storyPage: {
-    backgroundColor: colors.pageBg,
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
-    marginTop: -24,
-    paddingHorizontal: 28,
-    paddingTop: 28,
-    paddingBottom: 60,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-  },
-  storyTitle: {
-    fontSize: 26,
-    fontFamily: 'Rounded-Black',
-    color: colors.text,
-    textAlign: 'center',
-    marginBottom: 16,
+  placeholderIcon: {
+    fontSize: 80
   },
 
-  // ── Decorative divider — two short lines with a dot ─
-  divider: {
+  // ── Progress Indicator (minimalist dots) ─────────────
+  progressContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 20,
+    paddingVertical: 18,
+    backgroundColor: '#1a0f3d',
   },
-  dividerLine: {
-    width: 28,
-    height: 1.5,
-    borderRadius: 1,
-    backgroundColor: colors.primary,
-    opacity: 0.45,
+  progressDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'rgba(139,92,246,0.3)',
+    marginHorizontal: 4,
   },
-  dividerDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
-    backgroundColor: colors.primary,
-    opacity: 0.6,
-    marginHorizontal: 8,
+  progressDotActive: {
+    width: 24,
+    backgroundColor: '#8B5CF6',
   },
 
+  // ── Story Content Section (scrollable) ────────────────
+  storyScrollView: {
+    flex: 1,
+    backgroundColor: '#1a0f3d',
+  },
+  storyContentContainer: {
+    paddingHorizontal: 24,
+    paddingTop: 12,
+    paddingBottom: 140, // Space for nav buttons
+  },
+  storyTitle: {
+    fontSize: 38,
+    fontFamily: 'Baloo-ExtraBold',
+    color: '#FFFFFF',
+    marginBottom: 24,
+    lineHeight: 46,
+    letterSpacing: 0.2,
+  },
   storyBody: {
-    fontSize: 17,
-    fontFamily: 'Rounded-Medium',
-    lineHeight: 28,
-    color: colors.text,
+    fontSize: 22,
+    fontFamily: 'Baloo-Medium',
+    lineHeight: 36,
+    color: '#FFFFFF',
+    letterSpacing: 0.2,
   },
-  footer: {
-    marginTop: 36,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
+
+  // ── Sleek Navigation Buttons (bottom) ─────────────────
+  navigationControls: {
+    position: 'absolute',
+    bottom: 45,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 28,
+    zIndex: 100,
   },
-  footerText: {
-    fontSize: 13,
-    fontFamily: 'Rounded-Regular',
-    color: colors.textLight,
-    textAlign: 'center',
+  navButtonWrapper: {
+    // No wrapper styles needed now
+  },
+  navButton: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#8B5CF6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#8B5CF6',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  navButtonInactive: {
+    backgroundColor: 'rgba(139,92,246,0.25)',
+    shadowOpacity: 0.15,
+  },
+  navButtonDisabled: {
+    // No additional styles needed
   },
 
   // ── Error fallback ────────────────────────────────────
@@ -207,12 +310,12 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 18,
     fontFamily: 'Rounded-Bold',
-    color: colors.text,
+    color: '#FFFFFF',
   },
   errorBack: {
     fontSize: 16,
     fontFamily: 'Rounded-Medium',
-    color: colors.primary,
+    color: '#8B5CF6',
     marginTop: 12,
   },
 });

@@ -11,6 +11,13 @@ import { StoryProvider } from './src/context/StoryContext';
 import TabNavigator from './src/navigation/TabNavigator';
 import StoryDetailScreen from './src/screens/StoryDetailScreen';
 import OnboardingScreen from './src/screens/OnboardingScreen';
+import {
+  Baloo2_400Regular,
+  Baloo2_500Medium,
+  Baloo2_600SemiBold,
+  Baloo2_700Bold,
+  Baloo2_800ExtraBold,
+} from '@expo-google-fonts/baloo-2';
 
 const Stack = createNativeStackNavigator();
 
@@ -28,6 +35,12 @@ export default function App() {
     'Rounded-Black': require('./assets/fonts/SF-Pro-Rounded-Black.otf'),
     'SFPro-Heavy': require('./assets/fonts/SF-Pro-Heavy.otf'),
     'SFPro-Black': require('./assets/fonts/SF-Pro-Black.otf'),
+    // Children's storybook fonts (Baloo 2 - chunky, playful like image18)
+    'Baloo-Regular': Baloo2_400Regular,
+    'Baloo-Medium': Baloo2_500Medium,
+    'Baloo-SemiBold': Baloo2_600SemiBold,
+    'Baloo-Bold': Baloo2_700Bold,
+    'Baloo-ExtraBold': Baloo2_800ExtraBold,
   });
 
   useEffect(() => {

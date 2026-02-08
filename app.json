@@ -20,6 +20,12 @@
         "READ_MEDIA_IMAGES"
       ],
       "package": "com.kidstory.ai"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "06850957-c726-4912-a372-b5c3d36900f0"
+      }
+    },
+    "owner": "canturkay"
   }
 }

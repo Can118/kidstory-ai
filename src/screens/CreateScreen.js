@@ -18,6 +18,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import colors from '../theme/colors';
 import promptTemplates from '../data/promptTemplates';
 import { useStoryContext } from '../context/StoryContext';
@@ -58,6 +59,8 @@ export default function CreateScreen({ navigation }) {
   const [prompt, setPrompt] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
+  const [childName, setChildName] = useState('');
+  const [childAge, setChildAge] = useState(5);
   const { addStory } = useStoryContext();
 
   // ── Modal animation refs ──
@@ -142,6 +145,23 @@ export default function CreateScreen({ navigation }) {
     }
   }, [isPromptModalOpen]);
 
+  // Load child's name and age from AsyncStorage
+  useEffect(() => {
+    const loadChildData = async () => {
+      try {
+        const userData = await AsyncStorage.getItem('user_data');
+        if (userData) {
+          const parsed = JSON.parse(userData);
+          setChildName(parsed.name || '');
+          setChildAge(parsed.age || 5);
+        }
+      } catch (error) {
+        console.error('Error loading child data:', error);
+      }
+    };
+    loadChildData();
+  }, []);
+
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
@@ -211,7 +231,7 @@ export default function CreateScreen({ navigation }) {
 
     setIsLoading(true);
     try {
-      const story = await createStory(photoUri, prompt);
+      const story = await createStory(photoUri, prompt, childName, childAge);
       await addStory(story);
       setPhotoUri(null);
       setPrompt('');

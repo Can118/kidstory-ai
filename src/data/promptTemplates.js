@@ -1,12 +1,44 @@
 const promptTemplates = [
-  'Tell a magical story about a brave little explorer who discovers a secret garden where flowers sing and dance.',
-  'Create an adventure where a friendly little dragon learns that being different makes him truly special.',
-  'Write a bedtime story about a tiny cloud who floats down from the sky to grant wishes to sleeping children.',
-  'Tell a tale about a curious penguin who sets sail on a ship made of ice to find the land of eternal sunshine.',
-  'Create a story where a small bunny discovers a hidden door in the forest that leads to a world made of candy.',
-  'Write about a little star who falls from the sky and goes on a journey to find its way back home.',
-  'Tell a story about a playful kitten who finds a magical paintbrush that brings her drawings to life.',
-  'Create an adventure where a brave little fish swims through an underwater kingdom to save the coral reef.',
+  // Magic & Fantasy (most popular)
+  'riding a unicorn in the clouds',
+  'becoming a superhero',
+  'finding a magic wand',
+  'visiting a fairy castle',
+  'meeting a friendly dragon',
+  'swimming with mermaids',
+
+  // Animals & Nature
+  'talking to jungle animals',
+  'exploring the ocean with dolphins',
+  'helping baby dinosaurs',
+  'befriending a woodland fox',
+  'saving butterflies in the garden',
+
+  // Adventures & Exploration
+  'discovering a secret treehouse',
+  'sailing on a pirate ship',
+  'flying to outer space',
+  'exploring a candy kingdom',
+  'finding hidden treasure',
+
+  // Everyday Magic
+  'making toys come alive',
+  'baking magical cookies',
+  'building a robot friend',
+  'painting rainbows in the sky',
+  'growing a giant beanstalk',
+
+  // Seasonal & Special
+  'celebrating a birthday party',
+  'playing in the snow',
+  'going to the beach',
+  'trick-or-treating adventure',
+
+  // Friendship & Kindness
+  'making a new best friend',
+  'helping animals in need',
+  'sharing with others',
+  'being brave on the first day',
 ];
 
 export default promptTemplates;

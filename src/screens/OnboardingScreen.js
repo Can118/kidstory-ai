@@ -7,9 +7,12 @@ import {
   Animated,
   TouchableOpacity,
   TextInput,
+  Image,
+  Easing,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import { Picker } from '@react-native-picker/picker';
 
 const { width, height } = Dimensions.get('window');
 const isSE = width === 375 && height === 667;
@@ -18,11 +21,13 @@ const STEPS = {
   START: 'start',
   APPEAR: 'appear',
   NAME: 'name',
+  AGE: 'age',
 };
 
 export default function OnboardingScreen({ onComplete }) {
   const [step, setStep] = useState(STEPS.START);
   const [userName, setUserName] = useState('');
+  const [userAge, setUserAge] = useState(3);
 
   // Animation values - simplified based on reference
   const arrowOffset = useRef(new Animated.Value(-3)).current;
@@ -37,6 +42,9 @@ export default function OnboardingScreen({ onComplete }) {
   const cardsRotation = useRef(new Animated.Value(15)).current; // Start: 15, Appear: -15
   const cardsDownYOffset = useRef(new Animated.Value(0)).current;
   const cardsUserDataOffset = useRef(new Animated.Value(0)).current;
+
+  // Age step animation value
+  const ageStepOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     // Initial logo fade in
@@ -95,7 +103,11 @@ export default function OnboardingScreen({ onComplete }) {
         animateToName();
         break;
       case STEPS.NAME:
-        onComplete?.({ name: userName });
+        setStep(STEPS.AGE);
+        animateToAge();
+        break;
+      case STEPS.AGE:
+        onComplete?.({ name: userName, age: userAge });
         break;
     }
   };
@@ -157,13 +169,33 @@ export default function OnboardingScreen({ onComplete }) {
     ]).start();
   };
 
-  const renderCard = (emoji, title, style, cornerPosition) => {
+  const animateToAge = () => {
+    // Fade out NAME and fade in AGE simultaneously for instant transition
+    Animated.parallel([
+      Animated.timing(logoOpacity, {
+        toValue: 0,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+      Animated.timing(ageStepOpacity, {
+        toValue: 1,
+        duration: 250,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const renderCard = (imageSource, title, style, cornerPosition) => {
     return (
       <Animated.View style={[styles.cardContainer, cornerPosition, style]}>
         <View style={styles.card}>
           <Text style={styles.cardTitle}>{title}</Text>
           <View style={styles.cardImagePlaceholder}>
-            <Text style={styles.cardImageText}>{emoji}</Text>
+            <Image
+              source={imageSource}
+              style={styles.cardImage}
+              resizeMode="cover"
+            />
           </View>
         </View>
       </Animated.View>
@@ -308,6 +340,28 @@ export default function OnboardingScreen({ onComplete }) {
         </View>
       )}
 
+      {/* Age Step */}
+      {step === STEPS.AGE && (
+        <Animated.View style={[styles.ageStepContainer, { opacity: ageStepOpacity }]}>
+          <Text style={styles.stepTitle}>How old is {userName}?</Text>
+
+          <Picker
+            selectedValue={userAge}
+            onValueChange={(itemValue) => setUserAge(itemValue)}
+            style={styles.picker}
+            itemStyle={styles.pickerItem}
+          >
+            {Array.from({ length: 15 }, (_, i) => i + 1).map(age => (
+              <Picker.Item
+                key={age}
+                label={age === 15 ? '15+' : `${age}`}
+                value={age}
+              />
+            ))}
+          </Picker>
+        </Animated.View>
+      )}
+
       {/* Cards Group 1 */}
       <Animated.View
         style={[
@@ -321,8 +375,8 @@ export default function OnboardingScreen({ onComplete }) {
           },
         ]}
       >
-        {renderCard('✏️', 'Create', getCard1Transform(), styles.topLeftCorner)}
-        {renderCard('💭', 'Imagine', getCard2Transform(), styles.topRightCorner)}
+        {renderCard(require('../../assets/images/onboarding/card1.jpeg'), 'Create', getCard1Transform(), styles.topLeftCorner)}
+        {renderCard(require('../../assets/images/onboarding/card2.jpeg'), 'Imagine', getCard2Transform(), styles.topRightCorner)}
       </Animated.View>
 
       {/* Logo */}
@@ -341,15 +395,17 @@ export default function OnboardingScreen({ onComplete }) {
           },
         ]}
       >
-        {renderCard('📖', 'Library', getCard3Transform(), styles.bottomLeftCorner)}
-        {renderCard('🚀', 'Discover', getCard4Transform(), styles.bottomRightCorner)}
+        {renderCard(require('../../assets/images/onboarding/card3.jpeg'), 'Library', getCard3Transform(), styles.bottomLeftCorner)}
+        {renderCard(require('../../assets/images/onboarding/card4.jpeg'), 'Discover', getCard4Transform(), styles.bottomRightCorner)}
       </Animated.View>
 
       {/* Next Button */}
-      {step !== STEPS.NAME || userName !== '' ? (
+      {(step !== STEPS.NAME || userName !== '') && step !== STEPS.START ? (
         <Animated.View
           style={[
-            step === STEPS.NAME && userName !== ''
+            step === STEPS.AGE
+              ? styles.buttonContainerAgeStep
+              : step === STEPS.NAME && userName !== ''
               ? styles.buttonContainerNameStep
               : styles.buttonContainer,
             { opacity: buttonOpacity }
@@ -363,8 +419,10 @@ export default function OnboardingScreen({ onComplete }) {
               end={{ x: 1, y: 1 }}
               locations={[0, 0.5, 1]}
             >
-              {step === STEPS.NAME && userName !== '' ? (
-                <Text style={styles.buttonTextFinish}>Let's Start!</Text>
+              {step === STEPS.AGE || (step === STEPS.NAME && userName !== '') ? (
+                <Text style={styles.buttonTextFinish}>
+                  {step === STEPS.AGE ? "Let's Start!" : 'Next'}
+                </Text>
               ) : (
                 <Animated.View
                   style={{
@@ -476,10 +534,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8F4FF',
     borderRadius: 12,
     width: '100%',
-    alignItems: 'center',
-    justifyContent: 'center',
+    overflow: 'hidden',
     borderWidth: 1,
     borderColor: 'rgba(167, 139, 250, 0.1)',
+  },
+  cardImage: {
+    width: '100%',
+    height: '100%',
   },
   cardImageText: {
     fontSize: 60,
@@ -566,6 +627,27 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
   },
 
+  // Age Step
+  ageStepContainer: {
+    position: 'absolute',
+    top: height / 3,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    zIndex: 50,
+  },
+  picker: {
+    width: '100%',
+    height: 216,
+    marginTop: 32,
+  },
+  pickerItem: {
+    fontSize: 32,
+    fontFamily: 'Rounded-Bold',
+    color: '#FFFFFF',
+  },
+
   // Button
   buttonContainer: {
     position: 'absolute',
@@ -578,6 +660,14 @@ const styles = StyleSheet.create({
   buttonContainerNameStep: {
     position: 'absolute',
     top: height / 4 + 170,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 200,
+  },
+  buttonContainerAgeStep: {
+    position: 'absolute',
+    bottom: isSE ? 140 : 160,
     left: 0,
     right: 0,
     alignItems: 'center',
