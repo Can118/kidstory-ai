@@ -6,27 +6,38 @@
  *   Story text  →  OpenAI gpt-4o-mini OR Grok (xAI)  (cloud APIs)
  *   Story image →  Z-Image-Turbo                      (self-hosted on AWS EC2, saves to S3)
  *
- * Setup (dev only — keys in code)
- * ================================
- *   OPENAI_API_KEY      →  https://platform.openai.com/api-keys
- *   GROK_API_KEY        →  https://console.x.ai (xAI developer console)
- *   AWS_IMAGE_ENDPOINT  →  http://<your-ec2-public-ip>:8000
- *                           (paste once you've deployed the Z-Image Docker container)
- *   AI_PROVIDER         →  Set to 'openai' or 'grok'
+ * Setup - Environment Variables
+ * ==============================
+ *   GROK_API_KEY        →  Set in .env file (never commit!)
+ *   OPENAI_API_KEY      →  https://platform.openai.com/api-keys (optional)
+ *   AWS_IMAGE_ENDPOINT  →  http://<your-ec2-public-ip>:8000 (optional)
  *
- * ⚠️  SECURITY: For production, proxy both calls through a backend
- *     so keys / internal URLs never ship in the app bundle.
+ * For local development:
+ *   - Create .env file with: GROK_API_KEY=xai-your-key-here
+ *   - .env is in .gitignore and will NEVER be committed
+ *
+ * For production builds:
+ *   - Set secrets using: eas secret:create --scope project --name GROK_API_KEY --value xai-your-key
+ *   - Secrets are encrypted and secure
  */
 
+import Constants from 'expo-constants';
+
 // ============================================================
-// CONFIG  —  replace with your real values (dev only!)
+// CONFIG - Load from environment variables (SECURE)
 // ============================================================
-const OPENAI_API_KEY = 'sk-...';           // Not used - using Grok instead
-const GROK_API_KEY = 'xai-DYqi3wnQzoMCtlNS2t6NjIIoR3rIvrH3zrrnjAw5vsSQ9ysKU1jOJJ7FWYNXCmEM1KzXTdWIYPvsdWQC';
-const AWS_IMAGE_ENDPOINT = 'http://...';   // TODO: http://<ec2-ip>:8000
+const GROK_API_KEY = Constants.expoConfig?.extra?.grokApiKey || process.env.GROK_API_KEY || '';
+const OPENAI_API_KEY = Constants.expoConfig?.extra?.openaiApiKey || '';
+const AWS_IMAGE_ENDPOINT = Constants.expoConfig?.extra?.awsImageEndpoint || '';
 
 // Choose which AI to use for story generation: 'openai' or 'grok'
 const AI_PROVIDER = 'grok';
+
+// Validate API key is present
+if (!GROK_API_KEY && AI_PROVIDER === 'grok') {
+  console.error('⚠️ GROK_API_KEY not found! Story generation will fail.');
+  console.error('Set GROK_API_KEY in .env file or using EAS secrets');
+}
 
 // ============================================================
 // TEXT GENERATION — OpenAI GPT

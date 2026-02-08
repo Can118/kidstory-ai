@@ -31,7 +31,10 @@
     "extra": {
       "eas": {
         "projectId": "06850957-c726-4912-a372-b5c3d36900f0"
-      }
+      },
+      "grokApiKey": "${GROK_API_KEY}",
+      "openaiApiKey": "${OPENAI_API_KEY}",
+      "awsImageEndpoint": "${AWS_IMAGE_ENDPOINT}"
     },
     "owner": "canturkay"
   }
