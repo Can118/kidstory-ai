@@ -7,13 +7,15 @@ import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import * as Haptics from 'expo-haptics';
 import CreateScreen from '../screens/CreateScreen';
 import LibraryScreen from '../screens/LibraryScreen';
+import SettingsScreen from '../screens/SettingsScreen';
 import colors from '../theme/colors';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
 const TABS = [
-  { name: 'Create',  activeIcon: 'sparkles',    outlineIcon: 'sparkles-outline', useEmoji: true },
-  { name: 'Library', activeIcon: 'book',        outlineIcon: 'book-outline' },
+  { name: 'Create',   activeIcon: 'sparkles',    outlineIcon: 'sparkles-outline', useEmoji: true },
+  { name: 'Library',  activeIcon: 'book',        outlineIcon: 'book-outline' },
+  { name: 'Settings', activeIcon: 'settings',    outlineIcon: 'settings-outline' },
 ];
 
 // ── Main swipeable container holding both screens ────
@@ -65,9 +67,9 @@ function SwipeableScreens({ navigation }) {
       if (newPosition > 0) {
         // Block swiping right on first screen (Create)
         newPosition = 0;
-      } else if (newPosition < -SCREEN_WIDTH) {
-        // Block swiping left on last screen (Library)
-        newPosition = -SCREEN_WIDTH;
+      } else if (newPosition < -(SCREEN_WIDTH * 2)) {
+        // Block swiping left on last screen (Settings)
+        newPosition = -(SCREEN_WIDTH * 2);
       }
 
       translateX.setValue(newPosition);
@@ -86,13 +88,13 @@ function SwipeableScreens({ navigation }) {
       // Intelligent navigation decision
       if (translationX < -threshold || velocityX < -velocityThreshold) {
         // Swipe left
-        if (activeIndexRef.current < 1) {
-          targetIndex = 1;
+        if (activeIndexRef.current < 2) {
+          targetIndex = activeIndexRef.current + 1;
         }
       } else if (translationX > threshold || velocityX > velocityThreshold) {
         // Swipe right
         if (activeIndexRef.current > 0) {
-          targetIndex = 0;
+          targetIndex = activeIndexRef.current - 1;
         }
       }
 
@@ -163,7 +165,7 @@ function SwipeableScreens({ navigation }) {
       <GestureDetector gesture={pan}>
         <Animated.View style={{
           flexDirection: 'row',
-          width: SCREEN_WIDTH * 2,
+          width: SCREEN_WIDTH * 3,
           flex: 1,
           transform: [{ translateX }],
         }}>
@@ -172,6 +174,9 @@ function SwipeableScreens({ navigation }) {
           </View>
           <View style={{ width: SCREEN_WIDTH }}>
             <LibraryScreen navigation={navigation} onNavigateToCreate={() => setActiveIndex(0)} />
+          </View>
+          <View style={{ width: SCREEN_WIDTH }}>
+            <SettingsScreen />
           </View>
         </Animated.View>
       </GestureDetector>
@@ -238,7 +243,7 @@ const styles = StyleSheet.create({
   tabBar: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 80,
+    gap: 48,
     backgroundColor: colors.tabBg,
     paddingTop: 10,
     borderTopLeftRadius: 20,
