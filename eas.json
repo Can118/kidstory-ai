@@ -16,6 +16,13 @@
         "simulator": false
       }
     },
+    "testflight": {
+      "distribution": "internal",
+      "ios": {
+        "simulator": false,
+        "buildNumber": "2"
+      }
+    },
     "production": {
       "ios": {
         "simulator": false
