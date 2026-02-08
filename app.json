@@ -15,7 +15,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.kidstory.ai",
-      "buildNumber": "2",
+      "buildNumber": "3",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "kidstory ai needs access to your photo library to let you select photos for personalized story experiences. Photos are stored only on your device and never uploaded.",
         "ITSAppUsesNonExemptEncryption": false
