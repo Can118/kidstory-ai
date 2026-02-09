@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, Image, Alert, Modal, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, FlatList, Image, Alert, Modal, ScrollView, TouchableOpacity, Share } from 'react-native';
 import { TouchableOpacity as GHTouchableOpacity } from 'react-native-gesture-handler';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
+import * as StoreReview from 'expo-store-review';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import colors from '../theme/colors';
 import { useStoryContext } from '../context/StoryContext';
@@ -38,6 +39,9 @@ function Sparkle({ style, size = 7, color = '#C4B5FD' }) {
 export default function LibraryScreen({ navigation, onNavigateToCreate }) {
   const { stories, loading } = useStoryContext();
   const [settingsVisible, setSettingsVisible] = useState(false);
+
+  // Placeholder App Store link - will be updated after app release
+  const APP_STORE_LINK = 'https://apps.apple.com/app/kidstory-ai/id123456789';
 
   const handleResetOnboarding = () => {
     Alert.alert(
@@ -85,22 +89,58 @@ export default function LibraryScreen({ navigation, onNavigateToCreate }) {
     );
   };
 
+  const handleLeaveReview = async () => {
+    closeSettings();
+    try {
+      const isAvailable = await StoreReview.isAvailableAsync();
+      if (isAvailable) {
+        await StoreReview.requestReview();
+      } else {
+        Alert.alert(
+          'Review in App Store',
+          'Would you like to open the App Store to leave a review?',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Open App Store',
+              onPress: () => StoreReview.requestReview()
+            }
+          ]
+        );
+      }
+    } catch (error) {
+      console.error('Error requesting review:', error);
+      Alert.alert('Error', 'Unable to open review dialog. Please try again later.');
+    }
+  };
+
+  const handleShareWithFriends = async () => {
+    closeSettings();
+    try {
+      const message = `Check out kidstory ai - where your child becomes the hero of their own personalized stories! ✨\n\n${APP_STORE_LINK}`;
+      const result = await Share.share({
+        message: message,
+        title: 'kidstory ai - Personalized Stories',
+      });
+      if (result.action === Share.sharedAction) {
+        console.log('Shared successfully');
+      }
+    } catch (error) {
+      console.error('Error sharing:', error);
+      Alert.alert('Error', 'Unable to share. Please try again.');
+    }
+  };
+
   const settingsOptions = [
     {
       icon: 'star-outline',
       title: 'Leave a review',
-      onPress: () => {
-        closeSettings();
-        Alert.alert('Leave a Review', 'Thank you for your support!');
-      },
+      onPress: handleLeaveReview,
     },
     {
       icon: 'share-social-outline',
       title: 'Share with friends',
-      onPress: () => {
-        closeSettings();
-        Alert.alert('Share', 'Share this app with your friends!');
-      },
+      onPress: handleShareWithFriends,
     },
     {
       icon: 'help-circle-outline',
